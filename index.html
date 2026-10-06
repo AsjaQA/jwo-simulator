@@ -668,7 +668,7 @@ function gateHtml(g){
   <div class="gh"><b>${esc(g.name)}</b><span class="gstate" data-r="state">IDLE</span><span class="timer" data-r="timer"></span>
     <button class="btn sm ghost" data-a="remove" title="Remove gate">✕</button></div>
   <div class="gsec" data-r="enter">
-    <div class="seg"><button type="button" data-a="mode" data-m="scan">Scan QR (identify)</button><button type="button" data-a="mode" data-m="manual">Customer number</button></div>
+    <div class="seg"><button type="button" data-a="mode" data-m="scan">Scan QR (identify)</button><button type="button" data-a="mode" data-m="manual">Walk in (no scan)</button></div>
     <div class="gsec" data-r="scanBox">
       <div class="row"><input class="i mono" data-r="code" placeholder="shopper QR / identity code" style="flex:1;min-width:0">
         <button class="btn" data-a="camera" title="Scan the shopper's QR with the camera">📷 Scan</button></div>
@@ -677,9 +677,9 @@ function gateHtml(g){
       <p class="hint" style="margin:0">Customer number comes from the identify response. <span class="ep">POST …/customers/identify</span></p>
     </div>
     <div class="gsec hidden" data-r="manualBox">
-      <input class="i mono" data-r="cust" placeholder="customer number, e.g. 2026/0/0/0/124">
-      <button class="btn jwo block" data-a="manualEnter">Enter store with this customer</button>
-      <p class="hint" style="margin:0">Identify is not called — this customer number is used in the order.</p>
+      <input class="i mono" data-r="cust" placeholder="customer number (optional)">
+      <button class="btn jwo block" data-a="manualEnter">Walk in</button>
+      <p class="hint" style="margin:0">Identify is not called. The customer number is used in the order if given; otherwise it is sent blank.</p>
     </div>
   </div>
   <div class="gsec hidden" data-r="inside">
@@ -811,11 +811,10 @@ async function scanEnter(g){
 function manualEnter(g){
   if (!ready(g) || g.phase === 'in') return;
   const cust = g.r.cust.value.trim();
-  if (!cust) { toast(`${g.name}: enter the customer number`, 'bad'); g.r.cust.focus(); return; }
   g.code = '';
-  enter(g, cust, 'manual');
+  enter(g, cust, cust ? 'manual' : 'none');
   setState(g, 'IN STORE', 'ok');
-  toast(`${g.name}: customer <b>${esc(cust)}</b> entered without identify`, 'good');
+  toast(cust ? `${g.name}: customer <b>${esc(cust)}</b> walked in without identify` : `${g.name}: shopper walked in with no identity — customer will be sent blank`, 'good');
 }
 function enter(g, customer, src){
   g.phase = 'in'; g.customer = customer; g.custSrc = src; g.items = [];
@@ -880,7 +879,6 @@ async function walkOut(g){
   if (g.phase !== 'in' || g.sending) return;
   if (!ready(g)) return;
   if (!g.items.length) { toast(`${g.name}: basket is empty — take something first`, 'bad'); return; }
-  if (!g.customer) { toast(`${g.name}: no customer number`, 'bad'); return; }
   const body = orderBody(g);
   const keep = g.r.keepTrip.checked;
   if (!keep && S.orders.some(o => o.tripId === g.trip.id)) {
@@ -916,7 +914,9 @@ function renderGate(g){
   g.el.classList.toggle('in', inside);
   g.r.enter.classList.toggle('hidden', inside); g.r.inside.classList.toggle('hidden', !inside);
   if (!inside) { setState(g, 'IDLE'); g.r.timer.textContent = ''; }
-  g.r.custLine.innerHTML = inside ? `Customer <b>${esc(g.customer)}</b> <span class="dim">${g.custSrc === 'manual' ? '(entered — identify not called)' : '(from identify response)'}</span>` : '';
+  g.r.custLine.innerHTML = !inside ? ''
+    : g.custSrc === 'none' ? 'Customer <b>—</b> <span class="dim">(no identity — sent blank in the order)</span>'
+    : `Customer <b>${esc(g.customer)}</b> <span class="dim">${g.custSrc === 'manual' ? '(entered — identify not called)' : '(from identify response)'}</span>`;
   g.r.exitWrap.classList.toggle('hidden', !g.code);
   renderPick(g); renderCart(g); renderPreview(g); tickGate(g);
 }
@@ -941,7 +941,7 @@ function renderFloor(){
   gates.forEach(g => { g.el.querySelector('[data-a="remove"]').disabled = gates.length < 2; g.el.classList.toggle('locked', !S.auth); });
   $('#callout').innerHTML = !S.auth ? '<b>Step 1 ·</b> Sign in with username, password and domain to get a token.'
     : !S.settings.storeId ? '<b>Step 2 ·</b> Enter the <b>JWO store ID</b> in the Store card (Check connection fills it in).'
-    : 'Each gate is a lane: <b>scan the shopper\'s QR</b> (or enter a customer number), take items, then <b>walk out</b>. Add gates to run several shoppers at once.';
+    : 'Each gate is a lane: <b>scan the shopper\'s QR</b> or just <b>walk in</b> (identity is optional), take items, then <b>walk out</b>. Add gates to run several shoppers at once.';
 }
 
 /* ───────── live cart: RC cart API (display only; the purchase still goes through the JWO order) ─────────
