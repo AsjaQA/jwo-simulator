@@ -411,6 +411,7 @@ const S = {
   orders: store.get('orders', []),
 };
 S.auth = sess.get('auth.'+S.env);
+let rawDirty = false;  // hand-edited order JSON differs from the store
 const envCfg = () => ({ ...ENVS[S.env], platform: store.get('envOverride.'+S.env, {}).platform || ENVS[S.env].platform });
 const base = () => envCfg().platform.replace(/\/+$/, '');
 
@@ -693,6 +694,7 @@ function startTrip(){
   if (S.trip.phase === 'idle' || S.trip.phase === 'out') {
     S.trip = { phase:'in', start: new Date(), tripId: newTripId(), authEventId: uuid() };
     S.basket = []; renderBasket();
+    rawDirty = false;
   }
   clearInterval(timerH); timerH = setInterval(tick, 1000); tick();
   renderPhase(); renderPayload();
@@ -806,10 +808,12 @@ function orderBody(){
 }
 function renderPayload(){
   $('#tripId').value = S.trip.tripId || '';
-  if (!$('#rawMode').checked) $('#payload').value = pretty(orderBody());
+  // In hand-edit mode the JSON follows the store until the user types in it.
+  if (!$('#rawMode').checked || !rawDirty) $('#payload').value = pretty(orderBody());
 }
-$('#rawMode').onchange = e => { $('#payload').readOnly = !e.target.checked; if (!e.target.checked) renderPayload(); };
-$('#rebuild').onclick = () => { $('#payload').value = pretty(orderBody()); };
+$('#payload').addEventListener('input', () => { rawDirty = true; });
+$('#rawMode').onchange = e => { $('#payload').readOnly = !e.target.checked; rawDirty = false; renderPayload(); };
+$('#rebuild').onclick = () => { rawDirty = false; renderPayload(); };
 
 function findOrderId(o, d = 0){
   if (!o || typeof o !== 'object' || d > 5) return null;
@@ -825,6 +829,10 @@ $('#walkOutBtn').onclick = e => busy(e.currentTarget, async () => {
   if ($('#rawMode').checked) { try { body = JSON.parse($('#payload').value); } catch (x) { toast('Order JSON is invalid: ' + esc(x.message), 'bad'); return; } }
   else body = orderBody();
   if (!body.payload?.cartItems?.length) { toast('Basket is empty — pick something first', 'bad'); return; }
+  const usedTrip = body.payload.idempotentShoppingTripId;
+  if (!$('#keepTrip').checked && S.orders.some(o => o.tripId === usedTrip)) {
+    toast(`Trip ID <b>${esc(usedTrip)}</b> was already sent. Click ⟳ for a new one, or tick "Keep trip ID" to resend it on purpose.`, 'bad'); return;
+  }
   if (!body.payload?.shopperIdentity?.id) { toast('No customer number — identify the shopper at the gate first', 'bad'); return; }
   if ($('#exitScan').checked) {
     const x = await api('POST', '/integrations/external/orders/customers/identify', { body: identifyBody('EXIT') });
@@ -842,6 +850,7 @@ $('#walkOutBtn').onclick = e => busy(e.currentTarget, async () => {
   if (!$('#keepTrip').checked) { S.trip = { phase:'out', start:null, tripId:null, authEventId:null }; S.basket = []; renderBasket(); }
   renderPhase();
   $('#scanVal').value = ''; store.set('scan', ''); drawQr(''); if (!$('#keepTrip').checked) setCustomer('', 'identify');
+  if (!$('#keepTrip').checked) { rawDirty = false; renderPayload(); }
 });
 
 /* ───────── 5. orders & resync ───────── */
