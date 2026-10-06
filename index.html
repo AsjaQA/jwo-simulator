@@ -540,9 +540,18 @@ $$('[data-lt]').forEach(b => b.onclick = () => {
 });
 $('#loginCancel').onclick = hideLogin;
 $('#authBtn').onclick = () => {
-  if (S.auth) { S.auth = null; sess.set('auth.'+S.env, null); renderAuth(); setConn(null); renderPhase(); toast('Signed out'); }
+  if (S.auth) signOut();
   else showLogin();
 };
+/** Sign-out ends the whole session: tokens for every environment, the shopper and trip in progress,
+ *  the order list, the request log and results. Only setup (store ID, shelf SKUs, theme) is kept. */
+function signOut(){
+  try { Object.keys(sessionStorage).filter(k => k.startsWith('jwosim.')).forEach(k => sessionStorage.removeItem(k)); } catch {}
+  ['scan', 'orders', 'lastUser', 'lastDomain'].forEach(k => { try { localStorage.removeItem('jwosim.' + k); } catch {} });
+  S.settings.domain = ''; store.set('settings', S.settings);
+  sess.set('signedOut', true);
+  location.reload();
+}
 $('#loginForm').onsubmit = async e => {
   e.preventDefault();
   const btn = $('#loginBtn'), err = $('#loginErr'); err.textContent = '';
@@ -901,6 +910,7 @@ else if (matchMedia('(prefers-color-scheme: light)').matches) document.documentE
 fillSettings(); renderEnv(); renderAuth(); drawQr($('#scanVal').value);
 renderBasket(); renderOrders(); renderPhase();
 if (!S.auth) showLogin();
+if (sess.get('signedOut')) { sess.set('signedOut', null); toast('Signed out — new session started'); }
 })();
 </script>
 </body>
