@@ -76,51 +76,63 @@ pre{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padd
 .badge.warn{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
 .badge.dim{background:var(--panel2);color:var(--ink3)}
 
-/* ── store stage ── */
-.stagewrap{container-type:inline-size}
-.stage{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"entry exit" "shelf shelf";gap:12px}
-.stage>.z-entry{grid-area:entry} .stage>.z-shelf{grid-area:shelf;min-height:0} .stage>.z-exit{grid-area:exit}
-@container (min-width:900px){.stage{grid-template-columns:1fr 1.7fr 1.1fr;grid-template-areas:"entry shelf exit"}}
-@container (max-width:520px){.stage{grid-template-columns:1fr;grid-template-areas:"entry" "shelf" "exit"}}
-.zone{border:1px solid var(--line);border-radius:12px;background:var(--panel2);padding:14px;display:flex;flex-direction:column;gap:10px;position:relative;min-height:300px}
-.zone .zh{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);display:flex;align-items:center;gap:6px}
-.gate{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;flex:1;justify-content:center}
-.gatebar{width:100%;height:10px;border-radius:6px;background:var(--line);position:relative;overflow:hidden}
-.gatebar::after{content:"";position:absolute;inset:0;width:0;background:var(--ok);transition:width .5s}
-.gate.open .gatebar::after{width:100%}
-.qr{width:96px;height:96px;border-radius:10px;background:#fff;padding:6px;display:grid;grid-template-columns:repeat(11,1fr);gap:1px}
-.qr i{background:#0f1a24;border-radius:1px} .qr i.o{background:transparent}
-.state{font:600 12px var(--mono);letter-spacing:.06em}
-.state.ok{color:var(--ok)} .state.bad{color:var(--err)} .state.warn{color:var(--warn)}
-.shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
-.prod{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:8px;display:flex;flex-direction:column;gap:4px;position:relative}
-.prod .sw{height:44px;border-radius:7px;display:grid;place-items:center;font:700 11px var(--mono);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.4)}
-.prod .nm{font:500 12px var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.prod .act{display:flex;gap:4px}
-.prod .act .btn{flex:1;padding:4px 0}
-.prod .x{position:absolute;top:2px;right:4px;border:0;background:none;color:var(--ink3);cursor:pointer;font-size:12px;opacity:0}
-.prod:hover .x{opacity:1}
-.prod.in{border-color:var(--jwo);box-shadow:0 0 0 1px var(--jwo) inset}
-.prod .cnt{position:absolute;top:-7px;left:-7px;background:var(--jwo);color:#111;font:700 11px var(--mono);border-radius:999px;min-width:20px;height:20px;display:grid;place-items:center;padding:0 5px}
-.basket{display:flex;flex-direction:column;gap:6px;flex:1}
-.bl{display:grid;grid-template-columns:1fr 58px 26px 24px;gap:6px;align-items:center;font:12px var(--mono)}
-.bl input{padding:4px 6px}
-.bl .nd{accent-color:var(--jwo)}
-.empty{color:var(--ink3);text-align:center;padding:18px 8px;font-size:13px}
-.timer{font:600 20px var(--mono);color:var(--ink)}
-.zone.locked>*:not(.lock){opacity:.25;pointer-events:none;filter:grayscale(.6)}
-.lock{display:none}
-.zone.locked>.lock{display:grid;position:absolute;inset:0;place-items:center;text-align:center;padding:16px;z-index:2;border-radius:12px;background:color-mix(in srgb,var(--panel2) 55%,transparent)}
-.lock div{font:600 13px var(--sans);color:var(--ink2);max-width:220px}
-.lock div b{display:block;color:var(--jwo);font-size:22px;margin-bottom:4px}
-.zone.focus{border-color:var(--jwo);box-shadow:0 0 0 1px var(--jwo) inset,0 0 24px rgba(255,153,0,.15)}
+/* ── store floor: shelf + gates ── */
+.zh{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);display:flex;align-items:center;gap:6px}
 .callout{border:1px dashed var(--jwo);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:13px;color:var(--ink2)}
 .callout b{color:var(--jwo)}
-.linkbtn{border:0;background:none;color:var(--ink3);cursor:pointer;font-size:12px;text-decoration:underline;padding:0}
-.steps{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
-.steps span{font:500 11px var(--mono);padding:4px 10px;border-radius:999px;border:1px solid var(--line);color:var(--ink3)}
-.steps span.on{border-color:var(--jwo);color:var(--jwo)}
-.steps span.done{border-color:var(--ok);color:var(--ok)}
+.shelfbar{border:1px solid var(--line);border-radius:12px;background:var(--panel2);padding:12px;display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 4px;border:1px solid var(--line2);border-radius:999px;background:var(--panel);font:12px var(--mono)}
+.chip i{width:16px;height:16px;border-radius:50%;flex:none}
+.chip button{border:0;background:none;color:var(--ink3);cursor:pointer;padding:0 2px;font-size:12px}
+.chip button:hover{color:var(--err)}
+.floorbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.gates{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+.gatecard{border:1px solid var(--line);border-radius:14px;background:var(--panel2);padding:12px;display:flex;flex-direction:column;gap:10px;min-width:0;transition:border-color .2s,box-shadow .2s}
+.gatecard.in{border-color:var(--jwo);box-shadow:0 0 0 1px var(--jwo) inset}
+.gatecard.locked{opacity:.5;pointer-events:none}
+.gh{display:flex;align-items:center;gap:8px}
+.gh b{font-size:15px}
+.gstate{font:600 11px var(--mono);letter-spacing:.06em;padding:2px 8px;border-radius:999px;background:var(--panel);color:var(--ink3)}
+.gstate.ok{color:var(--ok)} .gstate.bad{color:var(--err)} .gstate.warn{color:var(--warn)} .gstate.jwo{color:var(--jwo)}
+.timer{font:600 13px var(--mono);color:var(--ink2);margin-left:auto}
+.gsec{display:flex;flex-direction:column;gap:8px}
+.gsec .seg{display:flex} .gsec .seg button{flex:1}
+.cust{font-size:13px;color:var(--ink2)} .cust b{font-family:var(--mono);color:var(--ink)}
+.pick{display:flex;flex-wrap:wrap;gap:5px}
+.pick button{border:1px solid var(--line2);background:var(--panel);border-radius:999px;padding:3px 9px;font:12px var(--mono);cursor:pointer}
+.pick button:hover{border-color:var(--jwo);color:var(--jwo)}
+.gres pre{max-height:160px}
+/* live cart display (a store screen, dark in both themes) */
+.disp{border-radius:12px;background:#0b1410;color:#cfe6dc;overflow:hidden;border:1px solid #1d2a25}
+.disp-h{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#0d1d16;border-bottom:1px solid #1d2a25;font:800 11px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:#7fe3b8}
+.disp-h .sync{margin-left:auto;display:flex;align-items:center;gap:7px;letter-spacing:0;text-transform:none;font:600 11.5px var(--sans);color:#9ab5a9;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.disp-h .sync i{width:8px;height:8px;border-radius:50%;background:#6c7d75;flex:none}
+.disp-h .sync.live i{background:#26d98c;box-shadow:0 0 0 3px rgba(38,217,140,.2)}
+.disp-h .sync.busy i{background:#f2b84b;animation:blink .8s infinite}
+.disp-h .sync.bad i{background:#ff5757}
+@keyframes blink{50%{opacity:.3}}
+.disp-body{padding:4px 12px;min-height:60px}
+.ln{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:center;padding:7px 0;border-bottom:1px dashed #243630}
+.ln:last-child{border-bottom:0}
+.ln.pending{opacity:.55}
+.ln .nm{font-weight:700;color:#e7f6ef;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ln .amt{text-align:right;font:700 13px var(--mono);color:#e7f6ef}
+.ln .sub{font:11px var(--mono);color:#7c9489;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ln .ctl{display:flex;justify-content:flex-end;gap:4px;align-items:center}
+.ln .ctl button{padding:0 8px;font-size:13px;line-height:1.5;background:#12241c;color:#cfe6dc;border:1px solid #243630;border-radius:6px;cursor:pointer}
+.ln .ctl button:hover{border-color:#2fbf8a}
+.ln .ctl .q{min-width:24px;text-align:center;font:700 12px var(--mono);color:#e7f6ef}
+.ln .ctl label{display:flex;align-items:center;gap:3px;font:10px var(--mono);color:#7c9489;cursor:pointer;margin-right:4px}
+.disp-empty{color:#6c8277;text-align:center;padding:18px 0;font-size:13px}
+.disp-t{border-top:1px solid #243630;padding:7px 12px 9px;font:12.5px var(--mono)}
+.disp-t div{display:flex;justify-content:space-between;color:#9ab5a9;padding:1px 0}
+.disp-t .tot{color:#e7f6ef;font-weight:800;font-size:15px;padding-top:5px;margin-top:4px;border-top:1px dashed #243630}
+.disp-w{padding:7px 12px;background:#2e2412;color:#f2c46d;font-size:12px;border-top:1px solid #4a3a1a}
+/* camera */
+.cam video{width:100%;border-radius:12px;background:#000;aspect-ratio:4/3;object-fit:cover;margin-top:12px}
+.camframe{position:relative}
+.camframe::after{content:"";position:absolute;inset:18% 22%;border:3px solid var(--jwo);border-radius:14px;box-shadow:0 0 0 999px rgba(0,0,0,.25);pointer-events:none;margin-top:6px}
 
 /* ── right column ── */
 .tabs{display:flex;gap:2px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:3px;margin-bottom:12px}
@@ -188,6 +200,17 @@ pre{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padd
         <div><label class="f" for="sMerchant">Merchant ID</label><input class="i mono" id="sMerchant" data-s="merchantId" placeholder="1161356"></div>
       </div>
       <label class="chk"><input type="checkbox" id="sDomainHdr" data-s="domainHeader"> Send <span class="mono">Domain</span> header</label>
+      <details class="more">
+        <summary>Live cart &amp; order defaults</summary>
+        <label class="chk"><input type="checkbox" id="sMirror" data-s="mirror"> Live cart display (RC cart API)</label>
+        <label class="f" for="sRcStore">RC store ID <span class="dim">(cart Entitlement header)</span></label>
+        <input class="i mono" id="sRcStore" data-s="rcStoreId" placeholder="filled by Check connection">
+        <p class="hint" style="margin-top:4px">Each gate opens its own cart at <span class="ep">/console/transactions/carts</span>, updates it as items are taken, re-reads it every few seconds and abandons it when the trip ends. Display only — the purchase is the JWO order.</p>
+        <div class="two">
+          <div><label class="f" for="sDevice">Shopper device ID</label><input class="i mono" id="sDevice" data-s="deviceId"></div>
+          <div><label class="f" for="sPay">Payment source ID</label><input class="i mono" id="sPay" data-s="paymentId"></div>
+        </div>
+      </details>
     </div>
 
     <div class="card">
@@ -221,88 +244,23 @@ pre{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padd
   <div class="col">
     <div class="card">
       <h3>JWO store floor <span class="grow"></span><span class="ep" id="storeLabel"></span></h3>
-      <div class="steps" id="steps">
-        <span data-st="login">1 · Login</span><span data-st="idle">2 · Gate (identify optional)</span><span data-st="shop">3 · Shopping</span><span data-st="out">4 · Walk out &amp; order</span>
-      </div>
       <div class="callout" id="callout"></div>
-      <div class="stagewrap"><div class="stage">
-        <!-- entry gate -->
-        <div class="zone z-entry">
-          <div class="zh">▸ Entry gate</div>
-          <div class="gate" id="entryGate">
-            <div class="qr" id="qr"></div>
-            <div class="state" id="entryState">IDLE</div>
-            <div class="gatebar"></div>
-          </div>
-          <div class="seg" id="gateMode" style="display:flex">
-            <button type="button" data-gm="scan" style="flex:1">Scan code (identify)</button>
-            <button type="button" data-gm="manual" style="flex:1">Customer number</button>
-          </div>
-          <div data-gp="scan" style="display:flex;flex-direction:column;gap:10px">
-            <label class="f" for="scanVal" style="margin:0">Customer identity code <span class="dim">(given by the shopper at entry)</span></label>
-            <input class="i mono" id="scanVal" placeholder="e.g. 0000361bmbokbnpu748ta66ce7f6nv9kf89v99k1egii6s20">
-            <div class="two">
-              <div><label class="f" for="scanChannel" style="margin:0 0 4px">Channel</label><select class="i" id="scanChannel"><option>RADIO</option><option>CAMERA</option><option>NFC</option></select></div>
-              <div><label class="f" style="margin:0 0 4px">Location</label><input class="i mono" value="ENTRY" readonly></div>
-            </div>
-            <button class="btn jwo block" id="tapInBtn">Scan at gate &amp; enter</button>
-            <p class="hint" style="margin:0">Customer number is taken from the response.<br><span class="ep">POST /integrations/external/orders/customers/identify</span></p>
-          </div>
-          <div data-gp="manual" class="hidden" style="display:flex;flex-direction:column;gap:10px">
-            <label class="f" for="manualCust" style="margin:0">Customer number</label>
-            <input class="i mono" id="manualCust" placeholder="e.g. 2026/0/0/0/124">
-            <button class="btn jwo block" id="manualEnterBtn">Enter store with this customer</button>
-            <p class="hint" style="margin:0">Identify is not called — this customer number is used in the order.</p>
-          </div>
+      <div class="shelfbar">
+        <div class="zh">▸ Shelf <span class="dim" style="text-transform:none;letter-spacing:0">— catalog SKUs shoppers can take</span></div>
+        <div class="row">
+          <input class="i mono" id="addSku" placeholder="SKU / item ID" style="flex:1;min-width:110px">
+          <input class="i mono" id="addUpc" placeholder="UPC (optional)" style="flex:1;min-width:110px">
+          <button class="btn" id="addSkuBtn">Add</button>
         </div>
-
-        <!-- shelf -->
-        <div class="zone z-shelf"><div class="lock"><div><b>🔒</b>Identify the shopper at the entry gate first</div></div>
-          <div class="zh">▸ Shelf <span class="grow"></span><span class="dim" style="text-transform:none;letter-spacing:0">tap + to pick, − to put back</span></div>
-          <div class="row">
-            <input class="i mono" id="addSku" placeholder="SKU / item ID" style="flex:1;min-width:110px">
-            <input class="i mono" id="addUpc" placeholder="UPC (optional)" style="flex:1;min-width:110px">
-            <button class="btn" id="addSkuBtn">Add</button>
-          </div>
-          <div class="shelf" id="shelf"></div>
-          <p class="hint" style="margin:0">Use SKUs that exist in the merchant catalog. Unknown SKUs and odd quantities are sent as typed, so you can test how the platform rejects them.</p>
-        </div>
-
-        <!-- exit -->
-        <div class="zone z-exit"><div class="lock"><div><b>🔒</b>The shopper needs to enter the store before walking out</div></div>
-          <div class="zh">▸ Basket &amp; exit <span class="grow"></span><span class="timer" id="timer">00:00</span></div>
-          <div class="bl dim" style="font-size:10px"><span>ITEM</span><span>QTY</span><span title="Exclude from wallet discount">NWD</span><span></span></div>
-          <div class="basket" id="basket"></div>
-          <label class="f" for="shopperId" style="margin:0">Customer number <span class="dim" id="shopperSrc">(from identify response)</span></label>
-          <input class="i mono" id="shopperId" placeholder="filled in at the gate" readonly>
-          <label class="chk" style="margin:0"><input type="checkbox" id="exitScan"> Send EXIT scan first</label>
-          <button class="btn jwo block" id="walkOutBtn">Walk out → create order</button>
-          <p class="hint" style="margin:0"><span class="ep">POST /orders/sync</span></p>
-        </div>
-      </div></div>
-
-      <details class="more">
-        <summary>Trip details &amp; payload</summary>
-        <label class="f" for="tripId">Idempotent shopping trip ID</label>
-        <div class="row"><input class="i mono" id="tripId" style="flex:1"><button class="btn sm" id="tripNew">⟳</button></div>
-        <div class="row" style="margin-top:8px;gap:6px">
-          <span class="dim" style="font-size:12px">Test scenario:</span>
-          <input class="i mono" id="scStatus" value="PENDING" style="width:96px" title="status">
-          <input class="i mono" id="scAmount" value="50" style="width:60px" title="amount">
-          <input class="i mono" id="scMin" value="0" style="width:50px" title="min">
-          <input class="i mono" id="scMax" value="0" style="width:50px" title="max">
-          <button class="btn sm" id="scApply">Apply</button>
-        </div>
-        <div class="two">
-          <div><label class="f" for="devId">Shopper device ID</label><input class="i mono" id="devId" value="device-uuid-987654321"></div>
-          <div><label class="f" for="payId">Payment source ID</label><input class="i mono" id="payId" value="PAYMENT123"></div>
-        </div>
-        <label class="chk"><input type="checkbox" id="rawMode"> Edit the order JSON by hand before walking out</label>
-        <textarea class="i" id="payload" rows="14" readonly></textarea>
-        <div class="row" style="margin-top:6px"><button class="btn sm" id="rebuild">Rebuild from store</button>
-          <label class="chk" style="margin:0"><input type="checkbox" id="keepTrip"> Keep trip ID after walk-out (resend to test duplicate handling)</label></div>
-      </details>
-      <div class="res" id="tripRes"></div>
+        <div class="chips" id="shelf"></div>
+      </div>
+      <div class="floorbar">
+        <span class="dim" id="gateCount"></span>
+        <span class="grow"></span>
+        <button class="btn sm" id="addGateBtn">＋ Add gate</button>
+        <button class="btn sm jwo" id="exitAllBtn">Walk out all</button>
+      </div>
+      <div class="gates" id="gates"></div>
     </div>
   </div>
 
@@ -341,7 +299,7 @@ pre{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padd
       </div>
 
       <div data-rp="log" class="hidden">
-        <div class="row" style="justify-content:flex-end"><button class="btn sm ghost" id="clearLog">Clear</button></div>
+        <div class="row" style="justify-content:flex-end"><select class="i" id="logFilter" style="width:auto;padding:4px 8px;font-size:12px"><option value="">All requests</option></select><button class="btn sm ghost" id="clearLog">Clear</button></div>
         <div class="loglist" id="log"><div class="empty">Nothing sent yet.</div></div>
       </div>
     </div>
@@ -373,6 +331,20 @@ pre{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padd
     <button class="btn primary block" id="loginBtn" style="margin-top:6px">Generate token &amp; sign in</button>
     <button type="button" class="btn ghost block" id="loginCancel" style="margin-top:6px">Cancel</button>
   </form>
+</div>
+<!-- camera QR scanner -->
+<div class="overlay hidden" id="camOverlay">
+  <div class="modal cam">
+    <div class="brand"><div class="logo">QR</div><div><span id="camTitle">Scan shopper QR</span><small>Shopper shows their app code</small></div></div>
+    <div class="camframe"><video id="camVideo" playsinline muted></video></div>
+    <canvas id="camCanvas" class="hidden"></canvas>
+    <p class="hint" id="camMsg">Starting camera…</p>
+    <div class="row" style="margin-top:10px">
+      <label class="btn sm" style="cursor:pointer">Upload QR image<input type="file" accept="image/*" id="camFile" class="hidden"></label>
+      <span class="grow"></span>
+      <button type="button" class="btn sm ghost" id="camCancel">Cancel</button>
+    </div>
+  </div>
 </div>
 <div id="toasts"></div>
 
@@ -417,25 +389,22 @@ function toast(msg, kind=''){
 const S = {
   env: store.get('env', 'beta'),
   auth: null,
-  settings: Object.assign({ storeId:'', domain:'', merchantId:'', domainHeader:true }, store.get('settings', {})),
+  settings: Object.assign({ storeId:'', domain:'', merchantId:'', domainHeader:true, mirror:true, rcStoreId:'', deviceId:'device-uuid-987654321', paymentId:'PAYMENT123' }, store.get('settings', {})),
   shelf: store.get('shelf', SAMPLE_SHELF),
-  basket: [],            // [{sku, upc, qty, nwd}]
-  trip: { phase:'idle', start:null, tripId:null, authEventId:null },
   orders: store.get('orders', []),
 };
 S.auth = sess.get('auth.'+S.env);
-let rawDirty = false;  // hand-edited order JSON differs from the store
 const envCfg = () => ({ ...ENVS[S.env], platform: store.get('envOverride.'+S.env, {}).platform || ENVS[S.env].platform });
 const base = () => envCfg().platform.replace(/\/+$/, '');
 
 /* ───────── network ───────── */
 let logN = 0;
-function logEntry(method, url, body, headers){
+function logEntry(method, url, body, headers, label, gate){
   if (!logN) $('#log').innerHTML = '';
   logN++; $('#logCount').textContent = `(${logN})`;
-  const d = document.createElement('details'); d.className = 'ent';
+  const d = document.createElement('details'); d.className = 'ent'; d.dataset.gate = gate || '';
   const path = url.replace(/^https?:\/\/[^/]+/, '');
-  d.innerHTML = `<summary><span class="m ${method}">${method}</span><span class="p" title="${esc(url)}">${esc(path)}</span><span class="c pend"><span class="spin"></span></span></summary><pre class="req"></pre><pre class="rs hidden"></pre><div class="tools"><button class="btn sm ghost" data-curl>Copy cURL</button></div>`;
+  d.innerHTML = `<summary><span class="m ${method}">${method}</span><span class="p" title="${esc(url)}">${esc(label || path)}</span><span class="c pend"><span class="spin"></span></span></summary><pre class="req"></pre><pre class="rs hidden"></pre><div class="tools"><button class="btn sm ghost" data-curl>Copy cURL</button></div>`;
   d.querySelector('.req').textContent = url + (body != null && body !== '' ? '\n\n' + pretty(body) : '');
   d.querySelector('[data-curl]').onclick = e => {
     e.preventDefault();
@@ -443,7 +412,7 @@ function logEntry(method, url, body, headers){
     const data = body != null ? ` --data '${(typeof body === 'string' ? body : JSON.stringify(body)).replace(/'/g, "'\\''")}'` : '';
     navigator.clipboard?.writeText(`curl --location --request ${method} '${url}'${h}${data}`).then(() => toast('cURL copied (includes token)'));
   };
-  $('#log').prepend(d);
+  $('#log').prepend(d); applyLogFilter();
   return (status, text, ms) => {
     const c = d.querySelector('.c');
     c.className = 'c ' + (status >= 200 && status < 300 ? 'ok' : 'bad');
@@ -461,7 +430,7 @@ function redact(v){
   return v;
 }
 /** Returns {ok, status, data, text, ms}. Never throws for HTTP errors; throws only when not signed in. */
-async function api(method, path, { body, form, basic, noAuth, url } = {}){
+async function api(method, path, { body, form, basic, noAuth, url, quiet, label, gate, headers: extra } = {}){
   const target = url || base() + path;
   const headers = {};
   let payload;
@@ -473,8 +442,9 @@ async function api(method, path, { body, form, basic, noAuth, url } = {}){
     if (S.auth.exp && S.auth.exp < Date.now()) { toast('Token expired — generate a new one', 'bad'); renderAuth(); showLogin(); throw new Error('Sign in first'); }
     headers['Authorization'] = 'Bearer ' + S.auth.token;
     if (S.settings.domainHeader && S.settings.domain) headers['Domain'] = S.settings.domain;
+    Object.assign(headers, extra);
   }
-  const done = logEntry(method, target, form ? payload.replace(/password=[^&]*/, 'password=•••') : (body === undefined ? null : body), headers);
+  const done = quiet ? () => {} : logEntry(method, target, form ? payload.replace(/password=[^&]*/, 'password=•••') : (body === undefined ? null : body), headers, label, gate);
   const t0 = performance.now();
   let res, text = '';
   try {
@@ -488,7 +458,7 @@ async function api(method, path, { body, form, basic, noAuth, url } = {}){
   const ms = Math.round(performance.now() - t0);
   done(res.status, text, ms);
   let data = null; try { data = text ? JSON.parse(text) : null; } catch { data = text; }
-  if (res.status === 401 && !basic && !noAuth) { toast('Session rejected (401). Sign in again.', 'bad'); }
+  if (res.status === 401 && !basic && !noAuth && !quiet) { toast('Session rejected (401). Sign in again.', 'bad'); }
   return { ok: res.ok, status: res.status, data, text, ms };
 }
 
@@ -516,7 +486,7 @@ function renderEnv(){
 }
 function switchEnv(k){
   S.env = k; store.set('env', k); S.auth = sess.get('auth.'+k);
-  renderEnv(); renderAuth(); setConn(null); renderPhase();
+  renderEnv(); renderAuth(); setConn(null); renderFloor();
   if (!S.auth && $('#loginOverlay').classList.contains('hidden')) showLogin();
 }
 function renderAuth(){
@@ -558,9 +528,11 @@ $('#authBtn').onclick = () => {
 };
 /** Sign-out ends the whole session: tokens for every environment, the shopper and trip in progress,
  *  the order list, the request log and results. Only setup (store ID, shelf SKUs, theme) is kept. */
-function signOut(){
+async function signOut(){
+  // Abandon every open RC cart before the token goes away (give up after 3 s).
+  await Promise.race([Promise.all(gates.map(g => closeRc(g, g.rc))), new Promise(r => setTimeout(r, 3000))]);
   try { Object.keys(sessionStorage).filter(k => k.startsWith('jwosim.')).forEach(k => sessionStorage.removeItem(k)); } catch {}
-  ['scan', 'manualCust', 'orders', 'lastUser', 'lastDomain'].forEach(k => { try { localStorage.removeItem('jwosim.' + k); } catch {} });
+  ['scan', 'manualCust', 'gateMode', 'orders', 'lastUser', 'lastDomain'].forEach(k => { try { localStorage.removeItem('jwosim.' + k); } catch {} });
   S.settings.domain = ''; store.set('settings', S.settings);
   sess.set('signedOut', true);
   location.reload();
@@ -591,8 +563,8 @@ $('#loginForm').onsubmit = async e => {
     }
     if (domain) { S.settings.domain = domain; store.set('lastDomain', domain); }
     saveSettings(); fillSettings();
-    sess.set('auth.'+S.env, S.auth); renderAuth(); hideLogin(); renderPhase();
-    setTimeout(() => { $('.z-entry').scrollIntoView({ behavior: 'smooth', block: 'center' }); $('#scanVal').focus(); }, 100);
+    sess.set('auth.'+S.env, S.auth); renderAuth(); hideLogin(); renderFloor();
+    setTimeout(() => { const g = gates[0]; if (g) { g.el.scrollIntoView({ behavior: 'smooth', block: 'center' }); (g.mode === 'manual' ? g.r.cust : g.r.code).focus(); } }, 100);
     toast(`Signed in to <b>${ENVS[S.env].label}</b>`, 'good');
     checkConnection();
   } catch (ex) {
@@ -602,7 +574,7 @@ $('#loginForm').onsubmit = async e => {
 };
 
 /* ───────── settings ───────── */
-function saveSettings(){ store.set('settings', S.settings); renderStoreHint(); $('#domainBadge').textContent = S.settings.domain || '—'; $('#storeLabel').textContent = S.settings.storeId || ''; renderPayload(); }
+function saveSettings(){ store.set('settings', S.settings); renderStoreHint(); $('#domainBadge').textContent = S.settings.domain || '—'; $('#storeLabel').textContent = S.settings.storeId || ''; gates.forEach(g => { renderPreview(g); renderCart(g); }); renderFloor(); }
 function fillSettings(){
   $$('[data-s]').forEach(el => { if (el.type === 'checkbox') el.checked = !!S.settings[el.dataset.s]; else el.value = S.settings[el.dataset.s] ?? ''; });
   $('#domainBadge').textContent = S.settings.domain || '—'; $('#storeLabel').textContent = S.settings.storeId || '';
@@ -624,6 +596,9 @@ async function checkConnection(){
   if (r.ok) {
     S.jwoStores = [...new Set((r.data?.authorizations || []).map(a => a.externalStoreID).filter(Boolean))];
     if (!S.settings.storeId && S.jwoStores.length === 1) { S.settings.storeId = S.jwoStores[0]; saveSettings(); fillSettings(); }
+    const auth = (r.data?.authorizations || []).find(a => a.externalStoreID === S.settings.storeId);
+    const rcStore = auth?.store?.storeID ?? auth?.locationID;
+    if (rcStore != null && !S.settings.rcStoreId) { S.settings.rcStoreId = String(rcStore); saveSettings(); fillSettings(); }
     renderStoreHint();
   }
 }
@@ -658,62 +633,148 @@ const rtPayload = () => schedPayload('rt', { filter: { operation: $$('.rtOp:chec
 $('#rtPrev').onclick = () => showPreview($('#rtRes'), rtPayload());
 $('#rtSend').onclick = e => busy(e.currentTarget, async () => showRes($('#rtRes'), await api('POST', '/scheduler/', { body: rtPayload() })));
 
-/* ───────── 2. entry gate ───────── */
-function drawQr(v){
-  const h = hash(v || 'x'); let html = '';
-  for (let i = 0; i < 121; i++) {
-    const x = i % 11, y = (i / 11) | 0;
-    const finder = (x < 3 && y < 3) || (x > 7 && y < 3) || (x < 3 && y > 7);
-    const on = finder ? !(x % 10 === 1 && y % 10 === 1) && !(x === 9 && y === 1) : ((hash(v + i) ^ h) & 3) === 0 || ((hash(i + v) >> 3) & 1);
-    html += `<i class="${on ? '' : 'o'}"></i>`;
-  }
-  $('#qr').innerHTML = html;
+/* ───────── store floor: shelf ───────── */
+const swatch = sku => { const h = hash(sku) % 360; return `linear-gradient(135deg,hsl(${h},60%,50%),hsl(${(h+40)%360},55%,30%))`; };
+function renderShelf(){
+  $('#shelf').innerHTML = S.shelf.length ? S.shelf.map((p, i) =>
+    `<span class="chip" title="${esc(p.sku)}${p.upc && p.upc !== p.sku ? ' · UPC ' + esc(p.upc) : ''}"><i style="background:${swatch(p.sku)}"></i>${esc(p.sku)}<button data-rm="${i}" title="Remove from shelf">✕</button></span>`).join('')
+    : '<span class="dim" style="font-size:13px">Shelf is empty. Add SKUs that exist in the merchant catalog.</span>';
+  gates.forEach(renderPick);
 }
-function randomScan(){ const a = 'abcdefghijklmnopqrstuv0123456789'; let s = '0000'; for (let i = 0; i < 44; i++) s += a[Math.random()*a.length|0]; return s; }
-$('#scanVal').value = store.get('scan', '');
-$('#shopperId').value = '';
-$('#scanVal').addEventListener('input', () => { store.set('scan', $('#scanVal').value.trim()); drawQr($('#scanVal').value); });
-$('#shopperId').addEventListener('input', renderPayload);
-function setCustomer(id, src){
-  $('#shopperId').value = id || '';
-  $('#shopperId').readOnly = true;
-  $('#shopperSrc').textContent = src === 'manual' ? '(entered — identify not called)' : '(from identify response)';
-  renderPayload();
+function addToShelf(){
+  const sku = $('#addSku').value.trim(); if (!sku) return;
+  if (!S.shelf.some(p => p.sku === sku)) S.shelf.push({ sku, upc: $('#addUpc').value.trim() || sku });
+  store.set('shelf', S.shelf); $('#addSku').value = ''; $('#addUpc').value = ''; $('#addSku').focus(); renderShelf();
 }
-$('#scanVal').addEventListener('keydown', e => { if (e.key === 'Enter') $('#tapInBtn').click(); });
-// Gate mode: identify via scan code, or skip identify and use a given customer number.
-function setGateMode(m){
-  S.gateMode = m; store.set('gateMode', m);
-  $$('[data-gm]').forEach(b => b.classList.toggle('on', b.dataset.gm === m));
-  $$('[data-gp]').forEach(p => p.classList.toggle('hidden', p.dataset.gp !== m));
-  renderPhase();
-}
-$$('[data-gm]').forEach(b => b.onclick = () => setGateMode(b.dataset.gm));
-$('#manualCust').value = store.get('manualCust', '');
-$('#manualCust').addEventListener('input', () => store.set('manualCust', $('#manualCust').value.trim()));
-$('#manualCust').addEventListener('keydown', e => { if (e.key === 'Enter') $('#manualEnterBtn').click(); });
-$('#manualEnterBtn').onclick = () => {
-  const cust = $('#manualCust').value.trim();
-  if (!S.auth) { showLogin(); return; }
-  if (!S.settings.storeId) { toast('Enter the JWO store ID in the Store card first', 'bad'); $('#sStore').focus(); return; }
-  if (!cust) { toast('Enter the customer number', 'bad'); $('#manualCust').focus(); return; }
-  S.trip.phase = 'idle';
-  startTrip();
-  setCustomer(cust, 'manual');
-  $('#entryGate').classList.add('open');
-  $('#entryState').textContent = 'CUSTOMER ENTERED · GATE OPEN'; $('#entryState').className = 'state ok';
-  toast(`Customer <b>${esc(cust)}</b> entered without identify — shopper is in the store`, 'good');
-};
+$('#addSkuBtn').onclick = addToShelf;
+[$('#addSku'), $('#addUpc')].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') addToShelf(); }));
+$('#shelf').addEventListener('click', e => {
+  const rm = e.target.closest('[data-rm]'); if (!rm) return;
+  S.shelf.splice(+rm.dataset.rm, 1); store.set('shelf', S.shelf); renderShelf();
+});
 
-function identifyBody(location){
-  return {
-    merchantDomain: S.settings.domain,
-    payload: {
-      requestId: uuid(), storeId: S.settings.storeId,
-      scanEvent: { id: uuid(), timestamp: iso(), location, value: $('#scanVal').value.trim(), channel: $('#scanChannel').value },
-    },
-    source: 'jwo',
-  };
+/* ───────── gates ─────────
+   Each gate is an independent lane: its own shopper, customer, basket, trip ID and live RC cart.
+   Several gates can have shoppers in the store at the same time. */
+const MAX_GATES = 8, POLL_MS = 4000;
+const gates = [];
+let gateSeq = 0;
+const newTripId = () => `sim-${S.settings.domain || 'X'}-${uuid()}`;
+const fmtQty = q => { const n = Number(q); return String(q).trim() !== '' && Number.isFinite(n) ? n.toFixed(1) : String(q); };
+const money = v => v == null || v === '' || isNaN(Number(v)) ? '—' : '$' + Number(v).toFixed(2);
+
+function gateHtml(g){
+  return `
+  <div class="gh"><b>${esc(g.name)}</b><span class="gstate" data-r="state">IDLE</span><span class="timer" data-r="timer"></span>
+    <button class="btn sm ghost" data-a="remove" title="Remove gate">✕</button></div>
+  <div class="gsec" data-r="enter">
+    <div class="seg"><button type="button" data-a="mode" data-m="scan">Scan QR (identify)</button><button type="button" data-a="mode" data-m="manual">Customer number</button></div>
+    <div class="gsec" data-r="scanBox">
+      <div class="row"><input class="i mono" data-r="code" placeholder="shopper QR / identity code" style="flex:1;min-width:0">
+        <button class="btn" data-a="camera" title="Scan the shopper's QR with the camera">📷 Scan</button></div>
+      <div class="two"><select class="i" data-r="channel"><option>RADIO</option><option>CAMERA</option><option>NFC</option></select>
+        <button class="btn jwo" data-a="scanEnter">Identify &amp; enter</button></div>
+      <p class="hint" style="margin:0">Customer number comes from the identify response. <span class="ep">POST …/customers/identify</span></p>
+    </div>
+    <div class="gsec hidden" data-r="manualBox">
+      <input class="i mono" data-r="cust" placeholder="customer number, e.g. 2026/0/0/0/124">
+      <button class="btn jwo block" data-a="manualEnter">Enter store with this customer</button>
+      <p class="hint" style="margin:0">Identify is not called — this customer number is used in the order.</p>
+    </div>
+  </div>
+  <div class="gsec hidden" data-r="inside">
+    <div class="cust" data-r="custLine"></div>
+    <div class="zh">Take from shelf</div>
+    <div class="pick" data-r="pick"></div>
+    <div class="disp">
+      <div class="disp-h">Live cart<span class="sync" data-r="sync"><i></i><span data-r="syncText">local</span></span></div>
+      <div class="disp-body" data-r="lines"></div>
+      <div class="disp-t hidden" data-r="totals"></div>
+      <div data-r="warns"></div>
+    </div>
+    <label class="chk hidden" data-r="exitWrap" style="margin:0"><input type="checkbox" data-r="exitScan"> Send EXIT scan before the order</label>
+    <div class="row"><button class="btn jwo" data-a="walkOut" style="flex:1">Walk out → create order</button><button class="btn sm ghost" data-a="abandon" title="Shopper leaves without buying; the RC cart is abandoned">Abandon</button></div>
+    <details class="more" style="margin-top:0">
+      <summary>Trip ID &amp; payload</summary>
+      <label class="f">Idempotent shopping trip ID</label>
+      <div class="row"><input class="i mono" data-r="tripId" style="flex:1;min-width:0"><button class="btn sm" data-a="newTrip" title="New trip ID">⟳</button></div>
+      <div class="row" style="margin-top:6px;gap:4px">
+        <span class="dim" style="font-size:12px">Scenario</span>
+        <input class="i mono" data-r="scStatus" value="PENDING" style="width:84px" title="status">
+        <input class="i mono" data-r="scAmount" value="50" style="width:50px" title="amount">
+        <input class="i mono" data-r="scMin" value="0" style="width:40px" title="min">
+        <input class="i mono" data-r="scMax" value="0" style="width:40px" title="max">
+        <button class="btn sm" data-a="scenario">Apply</button>
+      </div>
+      <label class="chk"><input type="checkbox" data-r="keepTrip"> Keep this trip after walk-out (resend the same trip ID to test duplicates)</label>
+      <pre data-r="preview"></pre>
+    </details>
+  </div>
+  <div class="gres" data-r="res"></div>`;
+}
+
+function createGate(){
+  if (gates.length >= MAX_GATES) return;
+  const n = ++gateSeq;
+  const g = { n, name: 'Gate ' + n, mode: store.get('gateMode', 'scan'), phase: 'idle', trip: null, items: [], customer: '', custSrc: '', code: '', rc: newRc(), sending: false };
+  g.el = document.createElement('div'); g.el.className = 'gatecard'; g.el.innerHTML = gateHtml(g);
+  g.r = {}; g.el.querySelectorAll('[data-r]').forEach(x => { g.r[x.dataset.r] = x; });
+  g.el.addEventListener('click', e => onGateClick(g, e));
+  g.r.code.addEventListener('keydown', e => { if (e.key === 'Enter') scanEnter(g); });
+  g.r.cust.addEventListener('keydown', e => { if (e.key === 'Enter') manualEnter(g); });
+  g.r.tripId.addEventListener('input', () => { if (g.trip) { g.trip.id = g.r.tripId.value.trim(); renderPreview(g); } });
+  g.r.lines.addEventListener('change', e => {
+    const k = e.target.dataset.nwd; if (k === undefined) return;
+    const it = g.items[+k]; if (it) { it.nwd = e.target.checked; renderPreview(g); }
+  });
+  gates.push(g); $('#gates').appendChild(g.el);
+  setMode(g, g.mode); renderGate(g); renderFloor();
+  return g;
+}
+function removeGate(g){
+  if (g.phase === 'in' && !confirm(`${g.name} has a shopper in the store. Remove it and abandon their cart?`)) return;
+  closeRc(g, g.rc);
+  gates.splice(gates.indexOf(g), 1); g.el.remove(); renderFloor();
+}
+function setMode(g, m){
+  g.mode = m; store.set('gateMode', m);
+  g.el.querySelectorAll('[data-a="mode"]').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+  g.r.scanBox.classList.toggle('hidden', m !== 'scan'); g.r.manualBox.classList.toggle('hidden', m !== 'manual');
+}
+function setState(g, text, cls = ''){ g.r.state.textContent = text; g.r.state.className = 'gstate ' + cls; }
+
+function onGateClick(g, e){
+  const b = e.target.closest('[data-a]'); if (!b) return;
+  const a = b.dataset.a;
+  if (a === 'remove') removeGate(g);
+  else if (a === 'mode') setMode(g, b.dataset.m);
+  else if (a === 'camera') openCamera(g);
+  else if (a === 'scanEnter') scanEnter(g);
+  else if (a === 'manualEnter') manualEnter(g);
+  else if (a === 'take') take(g, S.shelf[+b.dataset.i]);
+  else if (a === 'qty') setQty(g, g.items[+b.dataset.i], +b.dataset.d);
+  else if (a === 'del') removeItem(g, g.items[+b.dataset.i]);
+  else if (a === 'walkOut') walkOut(g);
+  else if (a === 'abandon') { if (confirm(`Abandon ${g.name}'s trip? No order is sent.`)) { resetGate(g); setState(g, 'ABANDONED', 'warn'); } }
+  else if (a === 'newTrip') { g.trip.id = newTripId(); renderPreview(g); }
+  else if (a === 'scenario') {
+    const v = k => g.r[k].value.trim();
+    g.trip.id = `test-status_${v('scStatus')}-amount_${v('scAmount')}-min_${v('scMin')}-max_${v('scMax')}-${S.settings.domain}-${10000 + (Math.random()*90000|0)}`;
+    renderPreview(g);
+  }
+}
+
+function ready(g, focusEl){
+  if (!S.auth) { showLogin(); return false; }
+  if (!S.settings.storeId) { toast('Enter the JWO store ID in the Store card first', 'bad'); $('#sStore').focus(); return false; }
+  return true;
+}
+
+/* entry: identify (optional) or a given customer number */
+function identifyBody(g, location){
+  return { merchantDomain: S.settings.domain, source: 'jwo', payload: {
+    requestId: uuid(), storeId: S.settings.storeId,
+    scanEvent: { id: uuid(), timestamp: iso(), location, value: g.code, channel: g.r.channel.value } } };
 }
 // Find a shopper/customer id in the identify response, whatever its shape.
 function findShopperId(o, d = 0){
@@ -725,160 +786,87 @@ function findShopperId(o, d = 0){
   for (const v of Object.values(o)) { const r = findShopperId(v, d + 1); if (r) return r; }
   return null;
 }
-$('#tapInBtn').onclick = e => busy(e.currentTarget, async () => {
-  if (!S.settings.storeId) { toast('Enter the JWO store ID in the Store card first', 'bad'); $('#sStore').focus(); return; }
-  if (!$('#scanVal').value.trim()) { toast('Enter the customer identity code the shopper gave at the gate', 'bad'); $('#scanVal').focus(); return; }
-  $('#entryState').textContent = 'SCANNING…'; $('#entryState').className = 'state warn';
-  const r = await api('POST', '/integrations/external/orders/customers/identify', { body: identifyBody('ENTRY') });
-  showRes($('#tripRes'), r);
-  const action = String(r.data?.action || '').toUpperCase();
-  const customer = r.data && typeof r.data === 'object' ? (r.data.id != null ? String(r.data.id) : findShopperId(r.data)) : null;
-  if (r.ok && action !== 'REJECT' && customer) {
-    $('#entryGate').classList.add('open');
-    $('#entryState').textContent = `${action || 'ACCEPTED'} · GATE OPEN`; $('#entryState').className = 'state ok';
-    S.trip.phase = 'idle';
-    startTrip();
-    setCustomer(customer, 'identify');
-    toast(`Customer <b>${esc(customer)}</b> identified — shopper is in the store`, 'good');
-  } else {
-    $('#entryGate').classList.remove('open');
-    const why = !r.ok ? (r.status || 'ERR') : action === 'REJECT' ? 'REJECT' : 'NO CUSTOMER';
-    $('#entryState').textContent = `DENIED · ${why}`; $('#entryState').className = 'state bad';
-    toast(!r.ok ? `Identify failed (${r.status || 'network'})`
-      : action === 'REJECT' ? 'Gate rejected this customer code (action: REJECT). Check the code or the shopper account.'
-      : 'Identify response had no customer number', 'bad');
-  }
-});
+async function scanEnter(g){
+  if (!ready(g) || g.phase === 'in' || g.busy) return;
+  g.code = g.r.code.value.trim();
+  if (!g.code) { toast(`${g.name}: enter or scan the shopper's QR code`, 'bad'); g.r.code.focus(); return; }
+  g.busy = true; setState(g, 'IDENTIFYING…', 'warn');
+  try {
+    const r = await api('POST', '/integrations/external/orders/customers/identify', { body: identifyBody(g, 'ENTRY'), label: `${g.name} · identify ENTRY`, gate: g.n });
+    const action = String(r.data?.action || '').toUpperCase();
+    const customer = r.data && typeof r.data === 'object' ? (r.data.id != null ? String(r.data.id) : findShopperId(r.data)) : null;
+    if (r.ok && action !== 'REJECT' && customer) {
+      enter(g, customer, 'identify');
+      setState(g, `${action || 'ACCEPTED'} · IN STORE`, 'ok');
+      toast(`${g.name}: customer <b>${esc(customer)}</b> identified — in the store`, 'good');
+    } else {
+      showRes(g.r.res, r);
+      const why = !r.ok ? (r.status || 'ERR') : action === 'REJECT' ? 'REJECT' : 'NO CUSTOMER';
+      setState(g, `DENIED · ${why}`, 'bad');
+      toast(`${g.name}: ` + (!r.ok ? `identify failed (${r.status || 'network'})` : action === 'REJECT' ? 'code rejected (action: REJECT)' : 'identify response had no customer number'), 'bad');
+    }
+  } catch (e) { if (e.message !== 'Sign in first') toast(esc(e.message), 'bad'); setState(g, 'IDLE'); }
+  finally { g.busy = false; }
+}
+function manualEnter(g){
+  if (!ready(g) || g.phase === 'in') return;
+  const cust = g.r.cust.value.trim();
+  if (!cust) { toast(`${g.name}: enter the customer number`, 'bad'); g.r.cust.focus(); return; }
+  g.code = '';
+  enter(g, cust, 'manual');
+  setState(g, 'IN STORE', 'ok');
+  toast(`${g.name}: customer <b>${esc(cust)}</b> entered without identify`, 'good');
+}
+function enter(g, customer, src){
+  g.phase = 'in'; g.customer = customer; g.custSrc = src; g.items = [];
+  g.trip = { id: newTripId(), start: new Date(), authEventId: uuid() };
+  g.rc = newRc(); g.r.res.innerHTML = '';
+  g.r.keepTrip.checked = false; g.r.exitScan.checked = false;
+  renderGate(g);  renderFloor();
+}
+function resetGate(g){
+  closeRc(g, g.rc); g.rc = newRc();
+  g.phase = 'idle'; g.items = []; g.customer = ''; g.custSrc = ''; g.trip = null; g.code = '';
+  g.r.code.value = ''; g.r.cust.value = '';
+  renderGate(g);  renderFloor();
+}
 
-/* ───────── trip ───────── */
-let timerH;
-function startTrip(){
-  if (S.trip.phase === 'idle' || S.trip.phase === 'out') {
-    S.trip = { phase:'in', start: new Date(), tripId: newTripId(), authEventId: uuid() };
-    S.basket = []; renderBasket();
-    rawDirty = false;
-  }
-  clearInterval(timerH); timerH = setInterval(tick, 1000); tick();
-  renderPhase(); renderPayload();
+/* basket — every change is mirrored into the gate's RC cart */
+function take(g, p){
+  if (!p || g.phase !== 'in') return;
+  const ex = g.items.find(x => x.sku === p.sku);
+  if (ex) setQty(g, ex, 1);
+  else { const it = { sku: p.sku, upc: p.upc || p.sku, qty: 1, nwd: false, lineID: null, dropped: false }; g.items.push(it); renderCart(g); renderPreview(g); syncAdd(g, it); }
 }
-function tick(){
-  if (!S.trip.start) { $('#timer').textContent = '00:00'; return; }
-  const s = Math.floor((Date.now() - S.trip.start) / 1000);
-  $('#timer').textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+function setQty(g, it, d){
+  if (!it) return;
+  const q = Math.max(0, Number(it.qty) + d);
+  if (q === 0) return removeItem(g, it);
+  it.qty = q; renderCart(g); renderPreview(g); syncQty(g, it);
 }
-function renderPhase(){
-  const inStore = S.trip.phase === 'in' || S.trip.phase === 'shop';
-  const cur = !S.auth ? 'login' : inStore ? 'shop' : 'idle';
-  const order = ['login', 'idle', 'shop', 'out'], i = order.indexOf(cur);
-  $$('#steps span').forEach(s => { const j = order.indexOf(s.dataset.st); s.className = j === i ? 'on' : j < i ? 'done' : ''; });
-  $('.z-shelf').classList.toggle('locked', !inStore);
-  $('.z-exit').classList.toggle('locked', !inStore);
-  $('.z-entry').classList.toggle('focus', !!S.auth && !inStore);
-  $('#tapInBtn').disabled = inStore; $('#manualEnterBtn').disabled = inStore;
-  $('#callout').innerHTML = !S.auth ? '<b>Step 1 ·</b> Sign in with username, password and domain to get a token.'
-    : inStore ? '<b>Step 3 ·</b> Shopper is in the store. Pick items from the shelf, then <b>Walk out</b> to create the order.'
-    : S.gateMode === 'manual'
-      ? '<b>Step 2 ·</b> Shopper is at the entry gate. Enter their <b>customer number</b> to let them in (identify is skipped).'
-      : '<b>Step 2 ·</b> Shopper is at the entry gate. Scan the <b>customer identity code</b> they give you — or switch to <b>Customer number</b> to skip identify.';
+function removeItem(g, it){
+  const i = g.items.indexOf(it); if (i < 0) return;
+  g.items.splice(i, 1); renderCart(g); renderPreview(g); syncDel(g, it);
 }
-const newTripId = () => `sim-${S.settings.domain || 'X'}-${uuid()}`;
-function ensureTrip(){ if (!S.trip.tripId) { S.trip.tripId = newTripId(); S.trip.authEventId = uuid(); } }
-$('#tripId').addEventListener('input', () => { S.trip.tripId = $('#tripId').value.trim(); renderPayload(); });
-$('#tripNew').onclick = () => { S.trip.tripId = newTripId(); renderPayload(); };
-$('#scApply').onclick = () => {
-  S.trip.tripId = `test-status_${$('#scStatus').value.trim()}-amount_${$('#scAmount').value.trim()}-min_${$('#scMin').value.trim()}-max_${$('#scMax').value.trim()}-${S.settings.domain}-${10000 + (Math.random()*90000|0)}`;
-  renderPayload();
-};
-['#devId', '#payId'].forEach(s => $(s).addEventListener('input', renderPayload));
 
-/* ───────── shelf & basket ───────── */
-const swatch = sku => { const h = hash(sku) % 360; return `linear-gradient(135deg,hsl(${h},55%,38%),hsl(${(h+40)%360},50%,22%))`; };
-function renderShelf(){
-  $('#shelf').innerHTML = S.shelf.length ? S.shelf.map((p, i) => {
-    const inB = S.basket.find(b => b.sku === p.sku);
-    return `<div class="prod ${inB ? 'in' : ''}">
-      ${inB ? `<span class="cnt">${esc(inB.qty)}</span>` : ''}
-      <button class="x" data-rm="${i}" title="Remove from shelf">✕</button>
-      <div class="sw" style="background:${swatch(p.sku)}">${esc(p.sku.slice(0, 10))}</div>
-      <div class="nm" title="${esc(p.sku)}${p.upc && p.upc !== p.sku ? ' · UPC ' + esc(p.upc) : ''}">${esc(p.sku)}</div>
-      <div class="act"><button class="btn sm" data-take="${i}" data-d="-1">−</button><button class="btn sm" data-take="${i}" data-d="1">+</button></div>
-    </div>`;
-  }).join('') : '<div class="empty" style="grid-column:1/-1">Shelf is empty. Add SKUs above.</div>';
-}
-function addToShelf(){
-  const sku = $('#addSku').value.trim(); if (!sku) return;
-  if (!S.shelf.some(p => p.sku === sku)) S.shelf.push({ sku, upc: $('#addUpc').value.trim() || sku });
-  store.set('shelf', S.shelf); $('#addSku').value = ''; $('#addUpc').value = ''; $('#addSku').focus(); renderShelf();
-}
-$('#addSkuBtn').onclick = addToShelf;
-[$('#addSku'), $('#addUpc')].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') addToShelf(); }));
-$('#shelf').addEventListener('click', e => {
-  const rm = e.target.closest('[data-rm]');
-  if (rm) { S.shelf.splice(+rm.dataset.rm, 1); store.set('shelf', S.shelf); renderShelf(); return; }
-  const t = e.target.closest('[data-take]'); if (!t || !['in', 'shop'].includes(S.trip.phase)) return;
-  const p = S.shelf[+t.dataset.take], d = +t.dataset.d;
-  let b = S.basket.find(x => x.sku === p.sku);
-  if (!b && d > 0) { b = { sku: p.sku, upc: p.upc || p.sku, qty: 0, nwd: false }; S.basket.push(b); }
-  if (!b) return;
-  b.qty = Math.max(0, Number(b.qty) + d);
-  if (b.qty === 0 && d < 0) S.basket = S.basket.filter(x => x !== b);
-  if (S.trip.phase === 'in') { S.trip.phase = 'shop'; renderPhase(); }
-  renderBasket();
-});
-function renderBasket(){
-  $('#basket').innerHTML = S.basket.length ? S.basket.map((b, i) => `<div class="bl">
-      <span title="${esc(b.sku)}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(b.sku)}</span>
-      <input class="i mono" data-q="${i}" value="${esc(b.qty)}">
-      <input type="checkbox" class="nd" data-n="${i}" ${b.nwd ? 'checked' : ''} title="Exclude from wallet discount">
-      <button class="btn sm ghost" data-del="${i}" style="padding:2px">✕</button></div>`).join('')
-    : '<div class="empty">Basket is empty.<br>Pick items from the shelf.</div>';
-  renderShelf(); renderPayload();
-}
-$('#basket').addEventListener('input', e => {
-  if (e.target.dataset.q !== undefined) { S.basket[+e.target.dataset.q].qty = e.target.value; renderShelf(); renderPayload(); }
-  if (e.target.dataset.n !== undefined) { S.basket[+e.target.dataset.n].nwd = e.target.checked; renderPayload(); }
-});
-$('#basket').addEventListener('click', e => { const d = e.target.closest('[data-del]'); if (d) { S.basket.splice(+d.dataset.del, 1); renderBasket(); } });
-
-/* ───────── 4. order ───────── */
-const fmtQty = q => { const n = Number(q); return String(q).trim() !== '' && Number.isFinite(n) ? n.toFixed(1) : String(q); };
-function orderBody(){
-  ensureTrip();
-  const start = S.trip.start || new Date(Date.now() - 5 * 60000);
-  const shopper = $('#shopperId').value.trim();
-  const body = {
-    merchantDomain: S.settings.domain,
-    payload: {
-      requestId: uuid(),
-      idempotentShoppingTripId: S.trip.tripId,
-      storeId: S.settings.storeId,
-      shoppingTrip: {
-        startTime: iso(start), endTime: iso(),
-        authEvents: [{ id: S.trip.authEventId, timestamp: iso(start), location: 'ENTRY', payloadType: 'SCAN_CODE', scanResult: { id: shopper, type: 'SHOPPER' } }],
-      },
-      cartItems: S.basket.map(b => ({
-        id: b.sku, type: 'SKU', quantity: { value: fmtQty(b.qty), unit: 'unit' },
-        externalIdentifiers: [{ id: b.upc || b.sku, type: 'UPC' }],
-      })),
-      shopperIdentity: { id: shopper },
-      shopperDeviceId: $('#devId').value.trim(),
-      paymentSource: { id: $('#payId').value.trim() },
-    },
-    source: 'jwo',
-  };
-  const nwd = S.basket.filter(b => b.nwd).map(b => b.sku);
+/* order */
+function orderBody(g){
+  const start = g.trip.start;
+  const body = { merchantDomain: S.settings.domain, source: 'jwo', payload: {
+    requestId: uuid(),
+    idempotentShoppingTripId: g.trip.id,
+    storeId: S.settings.storeId,
+    shoppingTrip: { startTime: iso(start), endTime: iso(),
+      authEvents: [{ id: g.trip.authEventId, timestamp: iso(start), location: 'ENTRY', payloadType: 'SCAN_CODE', scanResult: { id: g.customer, type: 'SHOPPER' } }] },
+    cartItems: g.items.map(b => ({ id: b.sku, type: 'SKU', quantity: { value: fmtQty(b.qty), unit: 'unit' }, externalIdentifiers: [{ id: b.upc || b.sku, type: 'UPC' }] })),
+    shopperIdentity: { id: g.customer },
+    shopperDeviceId: `${S.settings.deviceId || 'device-uuid-987654321'}${gates.length > 1 || g.n > 1 ? '-' + g.n : ''}`,
+    paymentSource: { id: S.settings.paymentId || 'PAYMENT123' },
+  } };
+  const nwd = g.items.filter(b => b.nwd).map(b => b.sku);
   if (nwd.length) body.walletDiscountExcludedItemIDs = nwd;
   return body;
 }
-function renderPayload(){
-  $('#tripId').value = S.trip.tripId || '';
-  // In hand-edit mode the JSON follows the store until the user types in it.
-  if (!$('#rawMode').checked || !rawDirty) $('#payload').value = pretty(orderBody());
-}
-$('#payload').addEventListener('input', () => { rawDirty = true; });
-$('#rawMode').onchange = e => { $('#payload').readOnly = !e.target.checked; rawDirty = false; renderPayload(); };
-$('#rebuild').onclick = () => { rawDirty = false; renderPayload(); };
-
 function findOrderId(o, d = 0){
   if (!o || typeof o !== 'object' || d > 5) return null;
   for (const [k, v] of Object.entries(o)) if (/^(order_?id|purchase_?id)$/i.test(k) && v != null && typeof v !== 'object') return String(v);
@@ -888,36 +876,275 @@ function findOrderId(o, d = 0){
 }
 const looksFailed = j => j && typeof j === 'object' && (j.success === false || /"status"\s*:\s*"(failed|failure|error)"/i.test(JSON.stringify(j)));
 
-$('#walkOutBtn').onclick = e => busy(e.currentTarget, async () => {
-  let body;
-  if ($('#rawMode').checked) { try { body = JSON.parse($('#payload').value); } catch (x) { toast('Order JSON is invalid: ' + esc(x.message), 'bad'); return; } }
-  else body = orderBody();
-  if (!body.payload?.cartItems?.length) { toast('Basket is empty — pick something first', 'bad'); return; }
-  if (!S.settings.storeId) { toast('Enter the JWO store ID in the Store card first', 'bad'); $('#sStore').focus(); return; }
-  body.payload.storeId = S.settings.storeId;  // the Store card always wins, even over hand-edited JSON
-  const usedTrip = body.payload.idempotentShoppingTripId;
-  if (!$('#keepTrip').checked && S.orders.some(o => o.tripId === usedTrip)) {
-    toast(`Trip ID <b>${esc(usedTrip)}</b> was already sent. Click ⟳ for a new one, or tick "Keep trip ID" to resend it on purpose.`, 'bad'); return;
+async function walkOut(g){
+  if (g.phase !== 'in' || g.sending) return;
+  if (!ready(g)) return;
+  if (!g.items.length) { toast(`${g.name}: basket is empty — take something first`, 'bad'); return; }
+  if (!g.customer) { toast(`${g.name}: no customer number`, 'bad'); return; }
+  const body = orderBody(g);
+  const keep = g.r.keepTrip.checked;
+  if (!keep && S.orders.some(o => o.tripId === g.trip.id)) {
+    toast(`${g.name}: trip ID was already sent. Click ⟳ for a new one, or tick "Keep this trip" to resend on purpose.`, 'bad'); return;
   }
-  if (!body.payload?.shopperIdentity?.id) { toast('No customer number — scan the shopper at the gate or enter a customer number', 'bad'); return; }
-  if ($('#exitScan').checked) {
-    const x = await api('POST', '/integrations/external/orders/customers/identify', { body: identifyBody('EXIT') });
-    if (!x.ok) toast(`EXIT scan failed (${x.status || 'network'}) — sending order anyway`, 'bad');
+  g.sending = true; setState(g, 'WALKING OUT…', 'warn'); g.r.walkOut = g.el.querySelector('[data-a="walkOut"]'); g.r.walkOut.disabled = true;
+  try {
+    if (g.r.exitScan.checked && g.code) {
+      const x = await api('POST', '/integrations/external/orders/customers/identify', { body: identifyBody(g, 'EXIT'), label: `${g.name} · identify EXIT`, gate: g.n });
+      if (!x.ok) toast(`${g.name}: EXIT scan failed (${x.status || 'network'}) — sending order anyway`, 'bad');
+    }
+    const r = await api('POST', '/integrations/external/orders/sync', { body, label: `${g.name} · order`, gate: g.n });
+    const ok = r.ok && !looksFailed(r.data);
+    S.orders.unshift({ time: new Date().toISOString(), env: S.env, gate: g.name, tripId: body.payload.idempotentShoppingTripId,
+      items: body.payload.cartItems.length, status: r.status, ok, orderId: findOrderId(r.data) || '' });
+    S.orders = S.orders.slice(0, 200); store.set('orders', S.orders); renderOrders();
+    toast(`${g.name}: ` + (ok ? `order created ✓ ${esc(findOrderId(r.data) || '')}` : `order failed (${r.status || 'network'}) — see Orders to retry`), ok ? 'good' : 'bad');
+    if (keep) { setState(g, ok ? 'ORDER SENT · TRIP KEPT' : 'ORDER FAILED · TRIP KEPT', ok ? 'ok' : 'bad'); showRes(g.r.res, r); }
+    else { resetGate(g); setState(g, ok ? 'ORDER SENT · NEXT SHOPPER' : `ORDER FAILED · ${r.status || 'ERR'}`, ok ? 'ok' : 'bad'); showRes(g.r.res, r); }
+  } catch (e) { if (e.message !== 'Sign in first') toast(esc(e.message), 'bad'); setState(g, 'IN STORE', 'ok'); }
+  finally { g.sending = false; g.r.walkOut.disabled = false; }
+}
+$('#addGateBtn').onclick = () => { const g = createGate(); g?.el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); };
+$('#exitAllBtn').onclick = () => {
+  const leaving = gates.filter(g => g.phase === 'in' && g.items.length);
+  if (!leaving.length) { toast('No gate has a shopper with items', 'bad'); return; }
+  Promise.all(leaving.map(walkOut));
+};
+
+/* rendering */
+function renderGate(g){
+  const inside = g.phase === 'in';
+  g.el.classList.toggle('in', inside);
+  g.r.enter.classList.toggle('hidden', inside); g.r.inside.classList.toggle('hidden', !inside);
+  if (!inside) { setState(g, 'IDLE'); g.r.timer.textContent = ''; }
+  g.r.custLine.innerHTML = inside ? `Customer <b>${esc(g.customer)}</b> <span class="dim">${g.custSrc === 'manual' ? '(entered — identify not called)' : '(from identify response)'}</span>` : '';
+  g.r.exitWrap.classList.toggle('hidden', !g.code);
+  renderPick(g); renderCart(g); renderPreview(g); tickGate(g);
+}
+function renderPick(g){
+  g.r.pick.innerHTML = S.shelf.length ? S.shelf.map((p, i) => `<button data-a="take" data-i="${i}" title="Take one ${esc(p.sku)}">＋ ${esc(p.sku)}</button>`).join('')
+    : '<span class="dim" style="font-size:12px">Add SKUs to the shelf above.</span>';
+}
+function renderPreview(g){
+  if (!g.trip) { g.r.preview.textContent = ''; return; }
+  if (document.activeElement !== g.r.tripId) g.r.tripId.value = g.trip.id;
+  g.r.preview.textContent = pretty(orderBody(g));
+}
+function tickGate(g){
+  if (g.phase !== 'in' || !g.trip?.start) return;
+  const s = Math.floor((Date.now() - g.trip.start) / 1000);
+  g.r.timer.textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+}
+setInterval(() => gates.forEach(tickGate), 1000);
+function renderFloor(){
+  $('#gateCount').textContent = `${gates.length} gate${gates.length === 1 ? '' : 's'} · ${gates.filter(g => g.phase === 'in').length} shopper${gates.filter(g => g.phase === 'in').length === 1 ? '' : 's'} in store`;
+  $('#addGateBtn').disabled = gates.length >= MAX_GATES;
+  gates.forEach(g => { g.el.querySelector('[data-a="remove"]').disabled = gates.length < 2; g.el.classList.toggle('locked', !S.auth); });
+  $('#callout').innerHTML = !S.auth ? '<b>Step 1 ·</b> Sign in with username, password and domain to get a token.'
+    : !S.settings.storeId ? '<b>Step 2 ·</b> Enter the <b>JWO store ID</b> in the Store card (Check connection fills it in).'
+    : 'Each gate is a lane: <b>scan the shopper\'s QR</b> (or enter a customer number), take items, then <b>walk out</b>. Add gates to run several shoppers at once.';
+}
+
+/* ───────── live cart: RC cart API (display only; the purchase still goes through the JWO order) ─────────
+   One RC cart per gate trip. Its calls run strictly in order, so quick clicks never race, and gates are independent. */
+const mirrorOn = () => S.settings.mirror !== false && !!S.auth;
+const cartBase = () => base() + '/console/transactions/carts';
+function newRc(){ return { id: null, data: null, ms: null, err: null, pending: 0, q: Promise.resolve() }; }
+function enqueue(g, fn, { silent = false } = {}){
+  if (!mirrorOn()) return Promise.resolve();
+  const s = g.rc;
+  if (!silent) { s.pending++; if (g.rc === s) renderCart(g); }
+  s.q = s.q.then(() => fn(s)).catch(e => { s.err = e.message || String(e); })
+    .finally(() => { if (!silent) s.pending--; if (g.rc === s) renderCart(g); });
+  return s.q;
+}
+const errMsg = r => { const j = r.data || {}; return j.message || j.error_description || j.error || j.errors?.[0]?.message || ('HTTP ' + r.status); };
+async function cartCall(g, label, method, suffix, body, quiet){
+  const ent = S.settings.rcStoreId;
+  const r = await api(method, '', { url: cartBase() + suffix, body, quiet, label: `${g.name} · cart ${label}`, gate: g.n,
+    headers: ent ? { Entitlement: btoa(`LocationType=STORE,LocationID=${ent}`) } : {} });
+  if (r.status === 0) throw new Error('Cart API unreachable (network or CORS)');
+  return r;
+}
+async function ensureRc(g, s){
+  if (s.id) return;
+  const r = await cartCall(g, 'open', 'POST', '/', { cartName: `JWO ${g.name} ${g.trip.id.slice(-8)}`,
+    metadata: { externalDeviceID: orderBody(g).payload.shopperDeviceId, externalOrderID: g.trip.id }, source: 'JWO-SIM' });
+  if (!r.ok) throw new Error(errMsg(r));
+  const j = r.data || {}; const id = j.cartID ?? j.id ?? j.data?.cartID;
+  if (id == null) throw new Error('Cart created but no cartID in the response');
+  s.id = String(id);
+}
+async function refreshRc(g, s, quiet){
+  if (!s.id) return;
+  const r = await cartCall(g, 'read', 'GET', '/' + s.id + '?expand=payment', undefined, quiet);
+  if (r.status === 404) { s.id = null; s.data = null; throw new Error('RC cart no longer exists'); }
+  if (!r.ok) throw new Error(errMsg(r));
+  s.data = r.data; s.ms = r.ms; s.err = null;
+  if (g.rc === s) mapLines(g);
+}
+// Pair each basket item with its RC cart line.
+function mapLines(g){
+  const lines = g.rc.data?.items || [];
+  const claimed = new Set(g.items.map(e => e.lineID).filter(Boolean).map(String));
+  g.items.forEach(e => {
+    if (e.lineID && lines.some(l => String(l.cartItemID) === String(e.lineID))) return;
+    e.lineID = null;
+    const l = lines.find(l => !claimed.has(String(l.cartItemID)) && [String(l.itemID), String(l.upc)].some(x => x === e.sku || x === e.upc));
+    if (l) { e.lineID = String(l.cartItemID); claimed.add(e.lineID); e.dropped = false; }
+  });
+}
+function syncAdd(g, e){
+  enqueue(g, async s => {
+    if (!g.items.includes(e)) return;                       // returned before it was sent
+    await ensureRc(g, s);
+    const r = await cartCall(g, 'add ' + e.sku, 'PATCH', '/' + s.id + '/items', [{ itemID: e.sku, quantity: e.qty }]);
+    if (!r.ok) throw new Error(errMsg(r));
+    await refreshRc(g, s);
+    // The platform answers 200 for a code it cannot place and simply adds no line.
+    if (!e.lineID && g.items.includes(e)) e.dropped = true;
+  });
+}
+function syncQty(g, e){
+  enqueue(g, async s => {
+    if (!g.items.includes(e)) return;
+    if (!e.lineID) { if (!s.id || e.dropped) return; await refreshRc(g, s, true); if (!e.lineID) return; }
+    const line = (s.data?.items || []).find(l => String(l.cartItemID) === String(e.lineID));
+    const r = await cartCall(g, `qty ${e.sku} → ${e.qty}`, 'PATCH', '/' + s.id + '/items', [{ cartItemID: e.lineID, itemID: line ? line.itemID : e.sku, quantity: e.qty }]);
+    if (!r.ok) throw new Error(errMsg(r));
+    await refreshRc(g, s);
+  });
+}
+function syncDel(g, e){
+  enqueue(g, async s => {
+    if (!s.id) return;
+    await refreshRc(g, s, true);
+    const lines = s.data?.items || [];
+    const line = lines.find(l => String(l.cartItemID) === String(e.lineID))
+      || lines.find(l => !g.items.some(x => String(x.lineID) === String(l.cartItemID)) && [String(l.itemID), String(l.upc)].some(x => x === e.sku || x === e.upc));
+    if (!line) return;
+    const r = await cartCall(g, 'return ' + e.sku, 'DELETE', '/' + s.id + '/items/' + line.cartItemID);
+    if (!r.ok) throw new Error(errMsg(r));
+    await refreshRc(g, s);
+  });
+}
+/** Close the RC cart of a trip that ended (walked out, abandoned, gate removed or signed out). */
+function closeRc(g, s){
+  if (!mirrorOn()) return Promise.resolve();
+  s.q = s.q.then(async () => {
+    if (!s.id) return;
+    try {
+      await cartCall(g, 'reset', 'DELETE', '/' + s.id + '/reset');
+      await cartCall(g, 'abandon', 'PUT', '/' + s.id, { cartID: s.id, status: 'Abandoned' });
+    } catch { /* already in the request log */ }
+    s.id = null;
+  });
+  return s.q;
+}
+// Realtime: re-read each open RC cart so server-side pricing (promotions, tax) shows up without a click.
+setInterval(() => {
+  if (document.hidden || !mirrorOn()) return;
+  gates.forEach(g => { if (g.rc.id && g.rc.pending === 0) enqueue(g, s => refreshRc(g, s, true), { silent: true }); });
+}, POLL_MS);
+
+function renderCart(g){
+  const box = g.r.lines, rc = g.rc;
+  const lines = Array.isArray(rc.data?.items) ? rc.data.items : null;
+  const rows = [], used = new Set();
+  if (lines) lines.forEach(l => { const e = g.items.find(x => x.lineID && String(x.lineID) === String(l.cartItemID)); if (e) used.add(e); rows.push({ line: l, e }); });
+  g.items.forEach(e => { if (!used.has(e)) rows.push({ e, pending: mirrorOn() && !e.dropped }); });
+  box.innerHTML = rows.length ? rows.map(({ line, e, pending }) => {
+    const i = e ? g.items.indexOf(e) : -1;
+    const qty = line?.quantity ?? e?.qty ?? '';
+    const amt = line?.amount != null ? money(line.amount) : pending ? 'pending' : e?.dropped ? 'not in RC' : '—';
+    const unit = line?.unitPrice != null ? ` · ${qty} × ${money(line.unitPrice)}` : '';
+    return `<div class="ln${pending ? ' pending' : ''}">
+      <div class="nm">${esc(line?.name || line?.itemID || e?.sku || '?')}</div><div class="amt">${esc(amt)}</div>
+      <div class="sub">${esc(e ? 'SKU ' + e.sku : 'item ' + (line?.itemID ?? ''))}${esc(unit)}</div>
+      <div class="ctl">${e ? `<label title="Exclude from wallet discount"><input type="checkbox" data-nwd="${i}" ${e.nwd ? 'checked' : ''}>NWD</label>
+        <button data-a="qty" data-i="${i}" data-d="-1">−</button><span class="q">${esc(e.qty)}</span><button data-a="qty" data-i="${i}" data-d="1">+</button><button data-a="del" data-i="${i}" title="Return all">✕</button>`
+        : `<span class="q">×${esc(qty)}</span>`}</div></div>`;
+  }).join('') : '<div class="disp-empty">Cart is empty — take an item off the shelf</div>';
+
+  const p = rc.data?.payment;
+  g.r.totals.classList.toggle('hidden', !p);
+  if (p) {
+    const row = (k, v, c = '') => `<div class="${c}"><span>${k}</span><span>${money(v)}</span></div>`;
+    g.r.totals.innerHTML = row('Subtotal', p.subTotal) + (Number(p.savings) > 0 ? row('Savings', -Math.abs(p.savings)) : '')
+      + (Number(p.fees) > 0 ? row('Fees', p.fees) : '') + row('Tax', p.tax) + row('Total', p.dueAmount ?? p.amount, 'tot');
   }
-  const r = await api('POST', '/integrations/external/orders/sync', { body });
-  showRes($('#tripRes'), r);
-  const ok = r.ok && !looksFailed(r.data);
-  S.orders.unshift({ time: new Date().toISOString(), env: S.env, tripId: body.payload.idempotentShoppingTripId,
-    items: body.payload.cartItems.length, status: r.status, ok, orderId: findOrderId(r.data) || '' });
-  S.orders = S.orders.slice(0, 200); store.set('orders', S.orders); renderOrders();
-  toast(ok ? 'Order created ✓' : `Order failed (${r.status || 'network'}) — see Orders to retry`, ok ? 'good' : 'bad');
-  S.trip.phase = 'out'; clearInterval(timerH);
-  $('#entryGate').classList.remove('open'); $('#entryState').textContent = 'IDLE'; $('#entryState').className = 'state';
-  if (!$('#keepTrip').checked) { S.trip = { phase:'out', start:null, tripId:null, authEventId:null }; S.basket = []; renderBasket(); }
-  renderPhase();
-  $('#scanVal').value = ''; store.set('scan', ''); drawQr(''); $('#manualCust').value = ''; store.set('manualCust', ''); if (!$('#keepTrip').checked) setCustomer('', 'identify');
-  if (!$('#keepTrip').checked) { rawDirty = false; renderPayload(); }
-});
+  const warns = [];
+  g.items.forEach(e => { if (e.dropped) warns.push(`RC added no line for ${e.sku} — unknown item?`); });
+  (rc.data?.errors || []).forEach(x => x?.message && warns.push(x.message));
+  if (rc.err) warns.push(rc.err);
+  g.r.warns.innerHTML = [...new Set(warns)].map(w => `<div class="disp-w">⚠ ${esc(w)}</div>`).join('');
+
+  const st = g.r.sync, tx = g.r.syncText;
+  if (!mirrorOn()) { st.className = 'sync'; tx.textContent = 'local only'; }
+  else if (rc.err) { st.className = 'sync bad'; tx.textContent = 'sync error'; }
+  else if (rc.pending > 0) { st.className = 'sync busy'; tx.textContent = 'syncing…'; }
+  else if (rc.id) { st.className = 'sync live'; tx.textContent = `RC cart ${rc.id}${rc.ms != null ? ' · ' + rc.ms + ' ms' : ''}`; }
+  else { st.className = 'sync'; tx.textContent = 'no cart yet'; }
+}
+
+/* ───────── camera QR scanning ───────── */
+const cam = { g: null, stream: null, raf: 0, detector: null };
+function loadJsQR(){
+  if (window.jsQR) return Promise.resolve();
+  return new Promise((ok, fail) => { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js'; s.onload = ok; s.onerror = () => fail(new Error('Could not load the QR decoder')); document.head.appendChild(s); });
+}
+async function decodeFrom(source, w, h){
+  if (cam.detector) { try { const r = await cam.detector.detect(source); if (r[0]?.rawValue) return r[0].rawValue; } catch {} }
+  if (!window.jsQR) return null;
+  const c = $('#camCanvas'); c.width = w; c.height = h;
+  const ctx = c.getContext('2d', { willReadFrequently: true }); ctx.drawImage(source, 0, 0, w, h);
+  return window.jsQR(ctx.getImageData(0, 0, w, h).data, w, h, { inversionAttempts: 'attemptBoth' })?.data || null;
+}
+async function openCamera(g){
+  if (!ready(g)) return;
+  cam.g = g; $('#camTitle').textContent = `Scan shopper QR · ${g.name}`; $('#camMsg').textContent = 'Starting camera…';
+  $('#camOverlay').classList.remove('hidden');
+  try {
+    if (!cam.detector && 'BarcodeDetector' in window && (await BarcodeDetector.getSupportedFormats?.())?.includes('qr_code')) cam.detector = new BarcodeDetector({ formats: ['qr_code'] });
+    // jsQR is the fallback decoder (and the only one where BarcodeDetector is missing, e.g. Safari/Firefox)
+    if (cam.detector) loadJsQR().catch(() => {}); else await loadJsQR();
+  } catch (e) { $('#camMsg').textContent = e.message; }
+  try {
+    cam.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+    const v = $('#camVideo'); v.srcObject = cam.stream; await v.play();
+    $('#camMsg').textContent = 'Hold the shopper\'s QR code inside the frame.';
+    const loop = async () => {
+      if (!cam.stream) return;
+      if (v.readyState >= 2) { const text = await decodeFrom(v, v.videoWidth, v.videoHeight); if (text) return gotCode(text); }
+      cam.raf = requestAnimationFrame(loop);
+    };
+    loop();
+  } catch (e) {
+    $('#camMsg').textContent = `Camera unavailable (${e.name || e.message}). Allow camera access, or upload a photo of the QR instead.`;
+  }
+}
+function closeCamera(){
+  cancelAnimationFrame(cam.raf);
+  cam.stream?.getTracks().forEach(t => t.stop()); cam.stream = null;
+  $('#camVideo').srcObject = null; $('#camOverlay').classList.add('hidden');
+}
+function gotCode(text){
+  const g = cam.g; closeCamera(); if (!g) return;
+  g.r.code.value = text.trim(); toast(`${g.name}: QR read`, 'good');
+  scanEnter(g);
+}
+$('#camCancel').onclick = closeCamera;
+$('#camFile').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    await loadJsQR().catch(e => { if (!cam.detector) throw e; });
+    const img = new Image(), src = URL.createObjectURL(f);
+    try { await new Promise((ok, fail) => { img.onload = ok; img.onerror = fail; img.src = src; }); }
+    catch { throw new Error('That file could not be read as an image.'); } finally { URL.revokeObjectURL(src); }
+    const scale = Math.min(1, 1200 / Math.max(img.naturalWidth, img.naturalHeight));
+    const text = await decodeFrom(img, Math.round(img.naturalWidth * scale), Math.round(img.naturalHeight * scale));
+    if (text) gotCode(text); else $('#camMsg').textContent = 'No QR code found in that image. Try a sharper photo.';
+  } catch (x) { $('#camMsg').textContent = x.message; }
+};
 
 /* ───────── 5. orders & resync ───────── */
 function renderOrders(){
@@ -926,7 +1153,7 @@ function renderOrders(){
       <input type="checkbox" data-sel="${i}">
       <span class="tid" title="${esc(o.tripId)}">${esc(o.tripId)}</span>
       <span class="badge ${o.ok ? 'ok' : 'bad'}">${o.status || 'ERR'}</span>
-      <span class="t">${new Date(o.time).toLocaleString()} · ${esc(ENVS[o.env]?.label || o.env)} · ${o.items} item${o.items === 1 ? '' : 's'}</span>
+      <span class="t">${new Date(o.time).toLocaleString()} · ${esc(ENVS[o.env]?.label || o.env)}${o.gate ? ' · ' + esc(o.gate) : ''} · ${o.items} item${o.items === 1 ? '' : 's'}</span>
       <span></span>
       <input class="i" data-oid="${i}" value="${esc(o.orderId)}" placeholder="order ID (paste if missing)">
       <span></span><span></span>
@@ -958,15 +1185,21 @@ $$('[data-rt]').forEach(b => b.onclick = () => {
   $$('[data-rt]').forEach(x => x.classList.toggle('on', x === b));
   $$('[data-rp]').forEach(p => p.classList.toggle('hidden', p.dataset.rp !== b.dataset.rt));
 });
+function applyLogFilter(){
+  const sel = $('#logFilter'), v = sel.value;
+  const want = ['<option value="">All requests</option>', ...gates.map(g => `<option value="${g.n}">${esc(g.name)}</option>`)].join('');
+  if (sel.dataset.sig !== want) { sel.innerHTML = want; sel.value = gates.some(g => String(g.n) === v) ? v : ''; sel.dataset.sig = want; }
+  $$('#log .ent').forEach(d => d.classList.toggle('hidden', !!sel.value && d.dataset.gate !== sel.value));
+}
+$('#logFilter').onchange = applyLogFilter;
 $('#clearLog').onclick = () => { logN = 0; $('#logCount').textContent = ''; $('#log').innerHTML = '<div class="empty">Nothing sent yet.</div>'; };
 
 /* ───────── init ───────── */
 const theme = store.get('theme', null);
 if (theme) document.documentElement.dataset.theme = theme;
 else if (matchMedia('(prefers-color-scheme: light)').matches) document.documentElement.dataset.theme = 'light';
-S.gateMode = store.get('gateMode', 'scan');
-fillSettings(); renderStoreHint(); renderEnv(); renderAuth(); setGateMode(S.gateMode); drawQr($('#scanVal').value);
-renderBasket(); renderOrders(); renderPhase();
+fillSettings(); renderStoreHint(); renderEnv(); renderAuth();
+createGate(); renderShelf(); renderOrders(); renderFloor();
 if (!S.auth) showLogin();
 if (sess.get('signedOut')) { sess.set('signedOut', null); toast('Signed out — new session started'); }
 })();
