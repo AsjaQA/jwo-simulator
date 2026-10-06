@@ -180,7 +180,9 @@ pre{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padd
     <div class="card">
       <h3>Store <span class="grow"></span><span class="badge dim mono" id="domainBadge">—</span></h3>
       <label class="f" for="sStore">JWO store ID</label>
-      <input class="i mono" id="sStore" data-s="storeId" placeholder="ASTR-TST-ODLPDX">
+      <input class="i mono" id="sStore" data-s="storeId" placeholder="enter the JWO store ID" list="jwoStores">
+      <datalist id="jwoStores"></datalist>
+      <p class="hint" id="storeHint" style="margin-top:6px">Sent as <span class="mono">storeId</span> in every gate scan and order.</p>
       <div class="two">
         <div><label class="f" for="sDomain">Merchant domain</label><input class="i mono" id="sDomain" data-s="domain" placeholder="set at sign-in" readonly title="Comes from the domain you signed in with"></div>
         <div><label class="f" for="sMerchant">Merchant ID</label><input class="i mono" id="sMerchant" data-s="merchantId" placeholder="1161356"></div>
@@ -404,7 +406,7 @@ function toast(msg, kind=''){
 const S = {
   env: store.get('env', 'beta'),
   auth: null,
-  settings: Object.assign({ storeId:'ASTR-TST-ODLPDX', domain:'', merchantId:'', domainHeader:true }, store.get('settings', {})),
+  settings: Object.assign({ storeId:'', domain:'', merchantId:'', domainHeader:true }, store.get('settings', {})),
   shelf: store.get('shelf', SAMPLE_SHELF),
   basket: [],            // [{sku, upc, qty, nwd}]
   trip: { phase:'idle', start:null, tripId:null, authEventId:null },
@@ -589,7 +591,7 @@ $('#loginForm').onsubmit = async e => {
 };
 
 /* ───────── settings ───────── */
-function saveSettings(){ store.set('settings', S.settings); $('#domainBadge').textContent = S.settings.domain || '—'; $('#storeLabel').textContent = S.settings.storeId || ''; renderPayload(); }
+function saveSettings(){ store.set('settings', S.settings); renderStoreHint(); $('#domainBadge').textContent = S.settings.domain || '—'; $('#storeLabel').textContent = S.settings.storeId || ''; renderPayload(); }
 function fillSettings(){
   $$('[data-s]').forEach(el => { if (el.type === 'checkbox') el.checked = !!S.settings[el.dataset.s]; else el.value = S.settings[el.dataset.s] ?? ''; });
   $('#domainBadge').textContent = S.settings.domain || '—'; $('#storeLabel').textContent = S.settings.storeId || '';
@@ -608,6 +610,23 @@ async function checkConnection(){
   const r = await api('GET', '/integrations/providers/jwo/authorizations');
   showRes($('#connRes'), r);
   setConn(r.ok, r.ok ? `JWO connected · ${S.settings.domain || ENVS[S.env].label}` : `JWO ${r.status || 'unreachable'}`);
+  if (r.ok) {
+    S.jwoStores = [...new Set((r.data?.authorizations || []).map(a => a.externalStoreID).filter(Boolean))];
+    if (!S.settings.storeId && S.jwoStores.length === 1) { S.settings.storeId = S.jwoStores[0]; saveSettings(); fillSettings(); }
+    renderStoreHint();
+  }
+}
+// Shows which JWO store IDs this merchant is linked to, and warns when the field doesn't match any.
+function renderStoreHint(){
+  const list = S.jwoStores || [];
+  $('#jwoStores').innerHTML = list.map(x => `<option value="${esc(x)}">`).join('');
+  const id = S.settings.storeId;
+  const bad = list.length && id && !list.includes(id);
+  $('#sStore').style.borderColor = bad ? 'var(--err)' : '';
+  $('#storeHint').innerHTML = !id ? '<span style="color:var(--err)">Enter the JWO store ID — it is sent as <span class="mono">storeId</span> in every gate scan and order.</span>'
+    : bad ? `<span style="color:var(--err)">Not linked to this merchant. JWO store${list.length > 1 ? 's' : ''} for ${esc(S.settings.domain)}: <b class="mono">${list.map(esc).join(', ')}</b></span>`
+    : list.length ? `✓ Matches the merchant's JWO authorization. Sent as <span class="mono">storeId</span> in every gate scan and order.`
+    : 'Sent as <span class="mono">storeId</span> in every gate scan and order. Check connection to verify it.';
 }
 $('#connBtn').onclick = e => busy(e.currentTarget, checkConnection);
 
@@ -674,6 +693,7 @@ function findShopperId(o, d = 0){
   return null;
 }
 $('#tapInBtn').onclick = e => busy(e.currentTarget, async () => {
+  if (!S.settings.storeId) { toast('Enter the JWO store ID in the Store card first', 'bad'); $('#sStore').focus(); return; }
   if (!$('#scanVal').value.trim()) { toast('Enter the customer identity code the shopper gave at the gate', 'bad'); $('#scanVal').focus(); return; }
   $('#entryState').textContent = 'SCANNING…'; $('#entryState').className = 'state warn';
   const r = await api('POST', '/integrations/external/orders/customers/identify', { body: identifyBody('ENTRY') });
@@ -838,6 +858,8 @@ $('#walkOutBtn').onclick = e => busy(e.currentTarget, async () => {
   if ($('#rawMode').checked) { try { body = JSON.parse($('#payload').value); } catch (x) { toast('Order JSON is invalid: ' + esc(x.message), 'bad'); return; } }
   else body = orderBody();
   if (!body.payload?.cartItems?.length) { toast('Basket is empty — pick something first', 'bad'); return; }
+  if (!S.settings.storeId) { toast('Enter the JWO store ID in the Store card first', 'bad'); $('#sStore').focus(); return; }
+  body.payload.storeId = S.settings.storeId;  // the Store card always wins, even over hand-edited JSON
   const usedTrip = body.payload.idempotentShoppingTripId;
   if (!$('#keepTrip').checked && S.orders.some(o => o.tripId === usedTrip)) {
     toast(`Trip ID <b>${esc(usedTrip)}</b> was already sent. Click ⟳ for a new one, or tick "Keep trip ID" to resend it on purpose.`, 'bad'); return;
@@ -907,7 +929,7 @@ $('#clearLog').onclick = () => { logN = 0; $('#logCount').textContent = ''; $('#
 const theme = store.get('theme', null);
 if (theme) document.documentElement.dataset.theme = theme;
 else if (matchMedia('(prefers-color-scheme: light)').matches) document.documentElement.dataset.theme = 'light';
-fillSettings(); renderEnv(); renderAuth(); drawQr($('#scanVal').value);
+fillSettings(); renderStoreHint(); renderEnv(); renderAuth(); drawQr($('#scanVal').value);
 renderBasket(); renderOrders(); renderPhase();
 if (!S.auth) showLogin();
 if (sess.get('signedOut')) { sess.set('signedOut', null); toast('Signed out — new session started'); }
