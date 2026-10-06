@@ -86,6 +86,12 @@ pre{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padd
 .chip i{width:16px;height:16px;border-radius:50%;flex:none}
 .chip button{border:0;background:none;color:var(--ink3);cursor:pointer;padding:0 2px;font-size:12px}
 .chip button:hover{color:var(--err)}
+.chip .nwd{border:1px solid var(--line2);border-radius:999px;padding:0 6px;font:600 10px var(--mono);color:var(--ink3)}
+.chip .nwd:hover{color:var(--jwo);border-color:var(--jwo)}
+.chip.nwd-on{border-color:var(--jwo)}
+.chip.nwd-on .nwd{background:var(--jwo);border-color:var(--jwo);color:#111}
+.pick button.nwd-on{border-style:dashed;border-color:var(--jwo)}
+.pick button sup{color:var(--jwo);font-size:9px;margin-left:2px}
 .floorbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
 .gates{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
 .gatecard{border:1px solid var(--line);border-radius:14px;background:var(--panel2);padding:12px;display:flex;flex-direction:column;gap:10px;min-width:0;transition:border-color .2s,box-shadow .2s}
@@ -250,8 +256,10 @@ pre{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padd
         <div class="row">
           <input class="i mono" id="addSku" placeholder="SKU / item ID" style="flex:1;min-width:110px">
           <input class="i mono" id="addUpc" placeholder="UPC (optional)" style="flex:1;min-width:110px">
+          <label class="chk" style="margin:0" title="Items with this flag are sent in walletDiscountExcludedItemIDs"><input type="checkbox" id="addNwd"> No wallet discount</label>
           <button class="btn" id="addSkuBtn">Add</button>
         </div>
+        <p class="hint" style="margin:0">Tap <b class="mono">NWD</b> on a shelf item to exclude it from the wallet discount. When a shopper takes it, its ID is sent in <span class="mono">walletDiscountExcludedItemIDs</span>.</p>
         <div class="chips" id="shelf"></div>
       </div>
       <div class="floorbar">
@@ -637,18 +645,27 @@ $('#rtSend').onclick = e => busy(e.currentTarget, async () => showRes($('#rtRes'
 const swatch = sku => { const h = hash(sku) % 360; return `linear-gradient(135deg,hsl(${h},60%,50%),hsl(${(h+40)%360},55%,30%))`; };
 function renderShelf(){
   $('#shelf').innerHTML = S.shelf.length ? S.shelf.map((p, i) =>
-    `<span class="chip" title="${esc(p.sku)}${p.upc && p.upc !== p.sku ? ' · UPC ' + esc(p.upc) : ''}"><i style="background:${swatch(p.sku)}"></i>${esc(p.sku)}<button data-rm="${i}" title="Remove from shelf">✕</button></span>`).join('')
+    `<span class="chip${p.nwd ? ' nwd-on' : ''}" title="${esc(p.sku)}${p.upc && p.upc !== p.sku ? ' · UPC ' + esc(p.upc) : ''}"><i style="background:${swatch(p.sku)}"></i>${esc(p.sku)}`
+    + `<button class="nwd" data-nwdshelf="${i}" title="${p.nwd ? 'Excluded from wallet discount — click to allow it' : 'Click to exclude from wallet discount'}">NWD</button>`
+    + `<button data-rm="${i}" title="Remove from shelf">✕</button></span>`).join('')
     : '<span class="dim" style="font-size:13px">Shelf is empty. Add SKUs that exist in the merchant catalog.</span>';
   gates.forEach(renderPick);
 }
 function addToShelf(){
   const sku = $('#addSku').value.trim(); if (!sku) return;
-  if (!S.shelf.some(p => p.sku === sku)) S.shelf.push({ sku, upc: $('#addUpc').value.trim() || sku });
-  store.set('shelf', S.shelf); $('#addSku').value = ''; $('#addUpc').value = ''; $('#addSku').focus(); renderShelf();
+  if (!S.shelf.some(p => p.sku === sku)) S.shelf.push({ sku, upc: $('#addUpc').value.trim() || sku, nwd: $('#addNwd').checked });
+  store.set('shelf', S.shelf); $('#addSku').value = ''; $('#addUpc').value = ''; $('#addNwd').checked = false; $('#addSku').focus(); renderShelf();
 }
 $('#addSkuBtn').onclick = addToShelf;
 [$('#addSku'), $('#addUpc')].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') addToShelf(); }));
 $('#shelf').addEventListener('click', e => {
+  const t = e.target.closest('[data-nwdshelf]');
+  if (t) {
+    // Flag (or unflag) the item for every basket it is already in, too.
+    const p = S.shelf[+t.dataset.nwdshelf]; p.nwd = !p.nwd; store.set('shelf', S.shelf);
+    gates.forEach(g => { g.items.forEach(it => { if (it.sku === p.sku) it.nwd = p.nwd; }); renderCart(g); renderPreview(g); });
+    renderShelf(); return;
+  }
   const rm = e.target.closest('[data-rm]'); if (!rm) return;
   S.shelf.splice(+rm.dataset.rm, 1); store.set('shelf', S.shelf); renderShelf();
 });
@@ -835,7 +852,7 @@ function take(g, p){
   if (!p || g.phase !== 'in') return;
   const ex = g.items.find(x => x.sku === p.sku);
   if (ex) setQty(g, ex, 1);
-  else { const it = { sku: p.sku, upc: p.upc || p.sku, qty: 1, nwd: false, lineID: null, dropped: false }; g.items.push(it); renderCart(g); renderPreview(g); syncAdd(g, it); }
+  else { const it = { sku: p.sku, upc: p.upc || p.sku, qty: 1, nwd: !!p.nwd, lineID: null, dropped: false }; g.items.push(it); renderCart(g); renderPreview(g); syncAdd(g, it); }
 }
 function setQty(g, it, d){
   if (!it) return;
@@ -921,7 +938,7 @@ function renderGate(g){
   renderPick(g); renderCart(g); renderPreview(g); tickGate(g);
 }
 function renderPick(g){
-  g.r.pick.innerHTML = S.shelf.length ? S.shelf.map((p, i) => `<button data-a="take" data-i="${i}" title="Take one ${esc(p.sku)}">＋ ${esc(p.sku)}</button>`).join('')
+  g.r.pick.innerHTML = S.shelf.length ? S.shelf.map((p, i) => `<button data-a="take" data-i="${i}" class="${p.nwd ? 'nwd-on' : ''}" title="Take one ${esc(p.sku)}${p.nwd ? ' — no wallet discount' : ''}">＋ ${esc(p.sku)}${p.nwd ? '<sup>NWD</sup>' : ''}</button>`).join('')
     : '<span class="dim" style="font-size:12px">Add SKUs to the shelf above.</span>';
 }
 function renderPreview(g){
