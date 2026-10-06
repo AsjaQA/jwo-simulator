@@ -222,7 +222,7 @@ pre{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padd
     <div class="card">
       <h3>JWO store floor <span class="grow"></span><span class="ep" id="storeLabel"></span></h3>
       <div class="steps" id="steps">
-        <span data-st="login">1 · Login</span><span data-st="idle">2 · Identify at gate</span><span data-st="shop">3 · Shopping</span><span data-st="out">4 · Walk out &amp; order</span>
+        <span data-st="login">1 · Login</span><span data-st="idle">2 · Gate (identify optional)</span><span data-st="shop">3 · Shopping</span><span data-st="out">4 · Walk out &amp; order</span>
       </div>
       <div class="callout" id="callout"></div>
       <div class="stagewrap"><div class="stage">
@@ -234,15 +234,26 @@ pre{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padd
             <div class="state" id="entryState">IDLE</div>
             <div class="gatebar"></div>
           </div>
-          <label class="f" for="scanVal" style="margin:0">Customer identity code <span class="dim">(given by the shopper at entry)</span></label>
-          <input class="i mono" id="scanVal" placeholder="e.g. 0000361bmbokbnpu748ta66ce7f6nv9kf89v99k1egii6s20">
-          <div class="two">
-            <div><label class="f" for="scanChannel" style="margin:0 0 4px">Channel</label><select class="i" id="scanChannel"><option>RADIO</option><option>CAMERA</option><option>NFC</option></select></div>
-            <div><label class="f" style="margin:0 0 4px">Location</label><input class="i mono" value="ENTRY" readonly></div>
+          <div class="seg" id="gateMode" style="display:flex">
+            <button type="button" data-gm="scan" style="flex:1">Scan code (identify)</button>
+            <button type="button" data-gm="manual" style="flex:1">Customer number</button>
           </div>
-          <button class="btn jwo block" id="tapInBtn">Scan at gate &amp; enter</button>
-          <p class="hint" style="margin:0"><span class="ep">POST /integrations/external/orders/customers/identify</span></p>
-          <button class="linkbtn" id="skipGate" title="Start a trip without calling identify (for testing)">Skip gate (test without identity)</button>
+          <div data-gp="scan" style="display:flex;flex-direction:column;gap:10px">
+            <label class="f" for="scanVal" style="margin:0">Customer identity code <span class="dim">(given by the shopper at entry)</span></label>
+            <input class="i mono" id="scanVal" placeholder="e.g. 0000361bmbokbnpu748ta66ce7f6nv9kf89v99k1egii6s20">
+            <div class="two">
+              <div><label class="f" for="scanChannel" style="margin:0 0 4px">Channel</label><select class="i" id="scanChannel"><option>RADIO</option><option>CAMERA</option><option>NFC</option></select></div>
+              <div><label class="f" style="margin:0 0 4px">Location</label><input class="i mono" value="ENTRY" readonly></div>
+            </div>
+            <button class="btn jwo block" id="tapInBtn">Scan at gate &amp; enter</button>
+            <p class="hint" style="margin:0">Customer number is taken from the response.<br><span class="ep">POST /integrations/external/orders/customers/identify</span></p>
+          </div>
+          <div data-gp="manual" class="hidden" style="display:flex;flex-direction:column;gap:10px">
+            <label class="f" for="manualCust" style="margin:0">Customer number</label>
+            <input class="i mono" id="manualCust" placeholder="e.g. 2026/0/0/0/124">
+            <button class="btn jwo block" id="manualEnterBtn">Enter store with this customer</button>
+            <p class="hint" style="margin:0">Identify is not called — this customer number is used in the order.</p>
+          </div>
         </div>
 
         <!-- shelf -->
@@ -549,7 +560,7 @@ $('#authBtn').onclick = () => {
  *  the order list, the request log and results. Only setup (store ID, shelf SKUs, theme) is kept. */
 function signOut(){
   try { Object.keys(sessionStorage).filter(k => k.startsWith('jwosim.')).forEach(k => sessionStorage.removeItem(k)); } catch {}
-  ['scan', 'orders', 'lastUser', 'lastDomain'].forEach(k => { try { localStorage.removeItem('jwosim.' + k); } catch {} });
+  ['scan', 'manualCust', 'orders', 'lastUser', 'lastDomain'].forEach(k => { try { localStorage.removeItem('jwosim.' + k); } catch {} });
   S.settings.domain = ''; store.set('settings', S.settings);
   sess.set('signedOut', true);
   location.reload();
@@ -665,12 +676,34 @@ $('#scanVal').addEventListener('input', () => { store.set('scan', $('#scanVal').
 $('#shopperId').addEventListener('input', renderPayload);
 function setCustomer(id, src){
   $('#shopperId').value = id || '';
-  $('#shopperId').readOnly = src !== 'manual';
-  $('#shopperSrc').textContent = src === 'manual' ? '(type it — gate skipped)' : '(from identify response)';
+  $('#shopperId').readOnly = true;
+  $('#shopperSrc').textContent = src === 'manual' ? '(entered — identify not called)' : '(from identify response)';
   renderPayload();
 }
 $('#scanVal').addEventListener('keydown', e => { if (e.key === 'Enter') $('#tapInBtn').click(); });
-$('#skipGate').onclick = () => { startTrip(); setCustomer('', 'manual'); $('#shopperId').focus(); toast('Gate skipped — type the customer number for the order'); };
+// Gate mode: identify via scan code, or skip identify and use a given customer number.
+function setGateMode(m){
+  S.gateMode = m; store.set('gateMode', m);
+  $$('[data-gm]').forEach(b => b.classList.toggle('on', b.dataset.gm === m));
+  $$('[data-gp]').forEach(p => p.classList.toggle('hidden', p.dataset.gp !== m));
+  renderPhase();
+}
+$$('[data-gm]').forEach(b => b.onclick = () => setGateMode(b.dataset.gm));
+$('#manualCust').value = store.get('manualCust', '');
+$('#manualCust').addEventListener('input', () => store.set('manualCust', $('#manualCust').value.trim()));
+$('#manualCust').addEventListener('keydown', e => { if (e.key === 'Enter') $('#manualEnterBtn').click(); });
+$('#manualEnterBtn').onclick = () => {
+  const cust = $('#manualCust').value.trim();
+  if (!S.auth) { showLogin(); return; }
+  if (!S.settings.storeId) { toast('Enter the JWO store ID in the Store card first', 'bad'); $('#sStore').focus(); return; }
+  if (!cust) { toast('Enter the customer number', 'bad'); $('#manualCust').focus(); return; }
+  S.trip.phase = 'idle';
+  startTrip();
+  setCustomer(cust, 'manual');
+  $('#entryGate').classList.add('open');
+  $('#entryState').textContent = 'CUSTOMER ENTERED · GATE OPEN'; $('#entryState').className = 'state ok';
+  toast(`Customer <b>${esc(cust)}</b> entered without identify — shopper is in the store`, 'good');
+};
 
 function identifyBody(location){
   return {
@@ -741,10 +774,12 @@ function renderPhase(){
   $('.z-shelf').classList.toggle('locked', !inStore);
   $('.z-exit').classList.toggle('locked', !inStore);
   $('.z-entry').classList.toggle('focus', !!S.auth && !inStore);
-  $('#tapInBtn').disabled = inStore;
+  $('#tapInBtn').disabled = inStore; $('#manualEnterBtn').disabled = inStore;
   $('#callout').innerHTML = !S.auth ? '<b>Step 1 ·</b> Sign in with username, password and domain to get a token.'
     : inStore ? '<b>Step 3 ·</b> Shopper is in the store. Pick items from the shelf, then <b>Walk out</b> to create the order.'
-    : '<b>Step 2 ·</b> Shopper is at the entry gate. Enter the <b>customer identity code</b> they give you and scan to let them in.';
+    : S.gateMode === 'manual'
+      ? '<b>Step 2 ·</b> Shopper is at the entry gate. Enter their <b>customer number</b> to let them in (identify is skipped).'
+      : '<b>Step 2 ·</b> Shopper is at the entry gate. Scan the <b>customer identity code</b> they give you — or switch to <b>Customer number</b> to skip identify.';
 }
 const newTripId = () => `sim-${S.settings.domain || 'X'}-${uuid()}`;
 function ensureTrip(){ if (!S.trip.tripId) { S.trip.tripId = newTripId(); S.trip.authEventId = uuid(); } }
@@ -864,7 +899,7 @@ $('#walkOutBtn').onclick = e => busy(e.currentTarget, async () => {
   if (!$('#keepTrip').checked && S.orders.some(o => o.tripId === usedTrip)) {
     toast(`Trip ID <b>${esc(usedTrip)}</b> was already sent. Click ⟳ for a new one, or tick "Keep trip ID" to resend it on purpose.`, 'bad'); return;
   }
-  if (!body.payload?.shopperIdentity?.id) { toast('No customer number — identify the shopper at the gate first', 'bad'); return; }
+  if (!body.payload?.shopperIdentity?.id) { toast('No customer number — scan the shopper at the gate or enter a customer number', 'bad'); return; }
   if ($('#exitScan').checked) {
     const x = await api('POST', '/integrations/external/orders/customers/identify', { body: identifyBody('EXIT') });
     if (!x.ok) toast(`EXIT scan failed (${x.status || 'network'}) — sending order anyway`, 'bad');
@@ -880,7 +915,7 @@ $('#walkOutBtn').onclick = e => busy(e.currentTarget, async () => {
   $('#entryGate').classList.remove('open'); $('#entryState').textContent = 'IDLE'; $('#entryState').className = 'state';
   if (!$('#keepTrip').checked) { S.trip = { phase:'out', start:null, tripId:null, authEventId:null }; S.basket = []; renderBasket(); }
   renderPhase();
-  $('#scanVal').value = ''; store.set('scan', ''); drawQr(''); if (!$('#keepTrip').checked) setCustomer('', 'identify');
+  $('#scanVal').value = ''; store.set('scan', ''); drawQr(''); $('#manualCust').value = ''; store.set('manualCust', ''); if (!$('#keepTrip').checked) setCustomer('', 'identify');
   if (!$('#keepTrip').checked) { rawDirty = false; renderPayload(); }
 });
 
@@ -929,7 +964,8 @@ $('#clearLog').onclick = () => { logN = 0; $('#logCount').textContent = ''; $('#
 const theme = store.get('theme', null);
 if (theme) document.documentElement.dataset.theme = theme;
 else if (matchMedia('(prefers-color-scheme: light)').matches) document.documentElement.dataset.theme = 'light';
-fillSettings(); renderStoreHint(); renderEnv(); renderAuth(); drawQr($('#scanVal').value);
+S.gateMode = store.get('gateMode', 'scan');
+fillSettings(); renderStoreHint(); renderEnv(); renderAuth(); setGateMode(S.gateMode); drawQr($('#scanVal').value);
 renderBasket(); renderOrders(); renderPhase();
 if (!S.auth) showLogin();
 if (sess.get('signedOut')) { sess.set('signedOut', null); toast('Signed out — new session started'); }
