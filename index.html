@@ -328,7 +328,7 @@ pre{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padd
       <label class="f" for="lBase">Platform base URL</label><input class="i mono" id="lBase">
     </details>
     <div class="err" id="loginErr"></div>
-    <button class="btn primary block" id="loginBtn" style="margin-top:6px">Generate token &amp; sign in</button>
+    <button class="btn primary block" id="loginBtn" style="margin-top:6px">Sign in</button>
     <button type="button" class="btn ghost block" id="loginCancel" style="margin-top:6px">Cancel</button>
   </form>
 </div>
@@ -570,7 +570,7 @@ $('#loginForm').onsubmit = async e => {
   } catch (ex) {
     err.textContent = ex.message;
     $('#loginForm').classList.remove('shake'); void $('#loginForm').offsetWidth; $('#loginForm').classList.add('shake');
-  } finally { btn.disabled = false; btn.innerHTML = 'Generate token &amp; sign in'; }
+  } finally { btn.disabled = false; btn.innerHTML = 'Sign in'; }
 };
 
 /* ───────── settings ───────── */
