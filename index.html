@@ -1,0 +1,898 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JWO Store Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070d18; --panel:#101a2b; --panel2:#152236; --line:#1f2f48; --line2:#2a3d5c;
+  --ink:#e6edf3; --ink2:#9fb0c2; --ink3:#6b7d91;
+  --acc:#2b8cff; --acc2:#0077ED; --accHover:#4a9dff; --accGlow:rgba(0,119,237,.4); --onAcc:#fff;
+  --ok:#35d49a; --warn:#ffb84d; --err:#ff5d6c; --info:#5cc8ff; --jwo:#ff9900;
+  --radius:14px; --mono:'JetBrains Mono',ui-monospace,Menlo,monospace; --sans:'Space Grotesk',system-ui,sans-serif;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#eef2f5; --panel:#fff; --panel2:#f5f7fa; --line:#dbe3ea; --line2:#c9d4de;
+  --ink:#0f1a24; --ink2:#44576a; --ink3:#7a8b9c; color-scheme:light;
+  --acc:#0077ED; --acc2:#005fc0; --accHover:#0068d0; --accGlow:rgba(0,119,237,.22); --ok:#12a36e; --jwo:#d97f00;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;
+  background-image:radial-gradient(1200px 600px at 70% -10%,rgba(0,119,237,.07),transparent 60%),radial-gradient(900px 500px at -10% 110%,rgba(255,153,0,.05),transparent 60%)}
+button,input,select,textarea{font:inherit;color:inherit}
+.mono{font-family:var(--mono)} .muted{color:var(--ink2)} .dim{color:var(--ink3)} .hidden{display:none!important}
+
+header{display:flex;align-items:center;gap:14px;padding:12px 20px;border-bottom:1px solid var(--line);
+  background:color-mix(in srgb,var(--bg) 80%,transparent);backdrop-filter:blur(8px);position:sticky;top:0;z-index:20;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.02em}
+.brand .logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--acc2),#5cc8ff);display:grid;place-items:center;color:#fff;font-weight:800;font-size:12px;box-shadow:0 0 22px var(--accGlow)}
+.brand small{display:block;font-weight:500;color:var(--ink3);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.grow{flex:1}
+.seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:6px 12px;border-radius:7px;cursor:pointer;color:var(--ink2);font-weight:500;transition:.2s}
+.seg button.on{background:var(--acc2);color:#fff;box-shadow:0 0 14px var(--accGlow)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel);font-size:12px;color:var(--ink2);max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ink3);flex:none}
+.dot.ok{background:var(--ok);box-shadow:0 0 10px var(--ok)} .dot.bad{background:var(--err)} .dot.warn{background:var(--warn)}
+.btn{border:1px solid var(--line2);background:var(--panel2);padding:8px 14px;border-radius:10px;cursor:pointer;font-weight:500;transition:transform .12s,background .2s,border-color .2s;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
+.btn:hover{border-color:var(--ink3)} .btn:active{transform:scale(.97)}
+.btn.primary{background:var(--acc2);border-color:var(--acc2);color:#fff;font-weight:600}
+.btn.primary:hover{background:var(--accHover);border-color:var(--accHover)}
+.btn.jwo{background:var(--jwo);border-color:var(--jwo);color:#111;font-weight:700}
+.btn.danger{color:var(--err);border-color:color-mix(in srgb,var(--err) 40%,var(--line))}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--ink2)} .btn.ghost:hover{color:var(--ink);border-color:var(--line)}
+.btn.sm{padding:5px 9px;font-size:12px;border-radius:8px}
+.btn.block{width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+
+main{display:grid;grid-template-columns:280px minmax(0,1fr) 360px;gap:16px;padding:16px 20px}
+@media (max-width:1240px){main{grid-template-columns:280px minmax(0,1fr)} #rightCol{grid-column:1 / -1}}
+@media (max-width:820px){main{grid-template-columns:1fr;padding:12px 16px}}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;min-width:0}
+.card h3{margin:0 0 12px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);display:flex;align-items:center;gap:8px}
+.card h3 .grow{flex:1}
+.ep{font-family:var(--mono);font-size:10.5px;color:var(--ink3);text-transform:none;letter-spacing:0;font-weight:400}
+label.f{display:block;font-size:12px;color:var(--ink2);margin:10px 0 4px}
+input.i,select.i,textarea.i{width:100%;padding:8px 10px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;outline:none;transition:border-color .2s}
+input.i:focus,select.i:focus,textarea.i:focus{border-color:var(--acc)}
+textarea.i{font-family:var(--mono);font-size:12px;line-height:1.5;resize:vertical}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chk{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2);cursor:pointer;margin:6px 0}
+.hint{font-size:12px;color:var(--ink3);margin:8px 0 0;line-height:1.45}
+details.more{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+details.more>summary{cursor:pointer;color:var(--ink2);font-size:13px}
+.res{margin-top:10px}
+pre{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:10px;font:12px/1.5 var(--mono);margin:6px 0 0;max-height:280px;overflow:auto;white-space:pre-wrap;word-break:break-word}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font:600 11px var(--mono)}
+.badge.ok{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.badge.bad{background:color-mix(in srgb,var(--err) 18%,transparent);color:var(--err)}
+.badge.warn{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.badge.dim{background:var(--panel2);color:var(--ink3)}
+
+/* ── store stage ── */
+.stagewrap{container-type:inline-size}
+.stage{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"entry exit" "shelf shelf";gap:12px}
+.stage>.z-entry{grid-area:entry} .stage>.z-shelf{grid-area:shelf;min-height:0} .stage>.z-exit{grid-area:exit}
+@container (min-width:900px){.stage{grid-template-columns:1fr 1.7fr 1.1fr;grid-template-areas:"entry shelf exit"}}
+@container (max-width:520px){.stage{grid-template-columns:1fr;grid-template-areas:"entry" "shelf" "exit"}}
+.zone{border:1px solid var(--line);border-radius:12px;background:var(--panel2);padding:14px;display:flex;flex-direction:column;gap:10px;position:relative;min-height:300px}
+.zone .zh{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);display:flex;align-items:center;gap:6px}
+.gate{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;flex:1;justify-content:center}
+.gatebar{width:100%;height:10px;border-radius:6px;background:var(--line);position:relative;overflow:hidden}
+.gatebar::after{content:"";position:absolute;inset:0;width:0;background:var(--ok);transition:width .5s}
+.gate.open .gatebar::after{width:100%}
+.qr{width:96px;height:96px;border-radius:10px;background:#fff;padding:6px;display:grid;grid-template-columns:repeat(11,1fr);gap:1px}
+.qr i{background:#0f1a24;border-radius:1px} .qr i.o{background:transparent}
+.state{font:600 12px var(--mono);letter-spacing:.06em}
+.state.ok{color:var(--ok)} .state.bad{color:var(--err)} .state.warn{color:var(--warn)}
+.shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.prod{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:8px;display:flex;flex-direction:column;gap:4px;position:relative}
+.prod .sw{height:44px;border-radius:7px;display:grid;place-items:center;font:700 11px var(--mono);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.prod .nm{font:500 12px var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prod .act{display:flex;gap:4px}
+.prod .act .btn{flex:1;padding:4px 0}
+.prod .x{position:absolute;top:2px;right:4px;border:0;background:none;color:var(--ink3);cursor:pointer;font-size:12px;opacity:0}
+.prod:hover .x{opacity:1}
+.prod.in{border-color:var(--jwo);box-shadow:0 0 0 1px var(--jwo) inset}
+.prod .cnt{position:absolute;top:-7px;left:-7px;background:var(--jwo);color:#111;font:700 11px var(--mono);border-radius:999px;min-width:20px;height:20px;display:grid;place-items:center;padding:0 5px}
+.basket{display:flex;flex-direction:column;gap:6px;flex:1}
+.bl{display:grid;grid-template-columns:1fr 58px 26px 24px;gap:6px;align-items:center;font:12px var(--mono)}
+.bl input{padding:4px 6px}
+.bl .nd{accent-color:var(--jwo)}
+.empty{color:var(--ink3);text-align:center;padding:18px 8px;font-size:13px}
+.timer{font:600 20px var(--mono);color:var(--ink)}
+.zone.locked>*:not(.lock){opacity:.25;pointer-events:none;filter:grayscale(.6)}
+.lock{display:none}
+.zone.locked>.lock{display:grid;position:absolute;inset:0;place-items:center;text-align:center;padding:16px;z-index:2;border-radius:12px;background:color-mix(in srgb,var(--panel2) 55%,transparent)}
+.lock div{font:600 13px var(--sans);color:var(--ink2);max-width:220px}
+.lock div b{display:block;color:var(--jwo);font-size:22px;margin-bottom:4px}
+.zone.focus{border-color:var(--jwo);box-shadow:0 0 0 1px var(--jwo) inset,0 0 24px rgba(255,153,0,.15)}
+.callout{border:1px dashed var(--jwo);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:13px;color:var(--ink2)}
+.callout b{color:var(--jwo)}
+.linkbtn{border:0;background:none;color:var(--ink3);cursor:pointer;font-size:12px;text-decoration:underline;padding:0}
+.steps{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.steps span{font:500 11px var(--mono);padding:4px 10px;border-radius:999px;border:1px solid var(--line);color:var(--ink3)}
+.steps span.on{border-color:var(--jwo);color:var(--jwo)}
+.steps span.done{border-color:var(--ok);color:var(--ok)}
+
+/* ── right column ── */
+.tabs{display:flex;gap:2px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:3px;margin-bottom:12px}
+.tabs button{flex:1;border:0;background:transparent;padding:6px;border-radius:7px;cursor:pointer;color:var(--ink2);font-weight:500}
+.tabs button.on{background:var(--panel);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.ord{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;background:var(--panel2);display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:center}
+.ord .t{font:11px var(--mono);color:var(--ink3);grid-column:2 / 4}
+.ord .tid{font:12px var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ord input.i{grid-column:2 / 4;padding:5px 8px;font:12px var(--mono)}
+.ent{border-bottom:1px solid var(--line)}
+.ent summary{cursor:pointer;padding:8px 2px;display:flex;gap:8px;align-items:center;list-style:none;font-size:12px}
+.ent summary::-webkit-details-marker{display:none}
+.ent .m{font:700 10px var(--mono);padding:2px 6px;border-radius:5px;background:var(--panel2);color:var(--info)}
+.ent .m.POST{color:var(--jwo)}
+.ent .p{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--mono)}
+.ent .c{font:600 11px var(--mono);white-space:nowrap} .ent .c.ok{color:var(--ok)} .ent .c.bad{color:var(--err)} .ent .c.pend{color:var(--ink3)}
+.ent .tools{padding:0 0 10px}
+.loglist{max-height:calc(100vh - 220px);overflow:auto}
+
+/* ── modal ── */
+.overlay{position:fixed;inset:0;background:rgba(3,7,14,.6);backdrop-filter:blur(6px);display:grid;place-items:center;z-index:50;padding:16px}
+.modal{width:min(420px,100%);background:var(--panel);border:1px solid var(--line2);border-radius:18px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.5);max-height:calc(100vh - 32px);overflow:auto}
+.modal h2{margin:14px 0 2px;font-size:22px}
+.ltabs{display:flex;gap:16px;border-bottom:1px solid var(--line);margin:14px 0 4px}
+.ltabs button{border:0;background:none;padding:8px 2px;cursor:pointer;color:var(--ink3);border-bottom:2px solid transparent}
+.ltabs button.on{color:var(--ink);border-color:var(--acc)}
+.err{color:var(--err);font-size:13px;min-height:18px;margin-top:8px}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.spin{width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;display:inline-block;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+#toasts{position:fixed;bottom:18px;right:18px;display:flex;flex-direction:column;gap:8px;z-index:60}
+.toast{background:var(--panel);border:1px solid var(--line2);border-left:3px solid var(--acc);padding:10px 14px;border-radius:10px;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.35);transition:opacity .3s,transform .3s;max-width:360px}
+.toast.bad{border-left-color:var(--err)} .toast.good{border-left-color:var(--ok)}
+.toast.out{opacity:0;transform:translateY(8px)}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><div class="logo">JWO</div><div>JWO Store Simulator<small>Just Walk Out · RetailCloud</small></div></div>
+  <div class="seg" id="envSeg"></div>
+  <span class="grow"></span>
+  <span class="pill" id="connPill"><span class="dot" id="connDot"></span><span id="connText">Not checked</span></span>
+  <span class="pill" id="userPill"><span class="dot" id="userDot"></span><span id="userText">Signed out</span></span>
+  <button class="btn sm ghost" id="themeBtn" title="Toggle theme">◐</button>
+  <button class="btn sm" id="authBtn">Sign in</button>
+</header>
+
+<main>
+  <!-- LEFT: setup -->
+  <div class="col">
+    <div class="card">
+      <h3>0 · Login token <span class="grow"></span><span class="badge dim" id="tokBadge">none</span></h3>
+      <div id="tokInfo" class="hint" style="margin-top:0">Sign in with username, password and domain to generate a token.</div>
+      <button class="btn primary block" id="tokNew" style="margin-top:10px">Generate new token</button>
+    </div>
+    <div class="card">
+      <h3>Store <span class="grow"></span><span class="badge dim mono" id="domainBadge">—</span></h3>
+      <label class="f" for="sStore">JWO store ID</label>
+      <input class="i mono" id="sStore" data-s="storeId" placeholder="ASTR-TST-ODLPDX">
+      <div class="two">
+        <div><label class="f" for="sDomain">Merchant domain</label><input class="i mono" id="sDomain" data-s="domain" placeholder="set at sign-in" readonly title="Comes from the domain you signed in with"></div>
+        <div><label class="f" for="sMerchant">Merchant ID</label><input class="i mono" id="sMerchant" data-s="merchantId" placeholder="1161356"></div>
+      </div>
+      <label class="chk"><input type="checkbox" id="sDomainHdr" data-s="domainHeader"> Send <span class="mono">Domain</span> header</label>
+    </div>
+
+    <div class="card">
+      <h3>1 · Connection <span class="grow"></span></h3>
+      <p class="hint" style="margin-top:0">Checks the JWO provider authorization for this merchant.<br><span class="ep">GET /integrations/providers/jwo/authorizations</span></p>
+      <button class="btn primary block" id="connBtn" style="margin-top:10px">Check connection</button>
+      <div class="res" id="connRes"></div>
+    </div>
+
+    <div class="card">
+      <h3>3 · Item sync</h3>
+      <p class="hint" style="margin-top:0">Pushes the merchant catalog to JWO.<br><span class="ep">POST /integrations/providers/jwo/items/sync</span></p>
+      <button class="btn primary block" id="syncBtn" style="margin-top:10px">Sync items now</button>
+      <div class="res" id="syncRes"></div>
+      <details class="more">
+        <summary>Scheduled sync job</summary>
+        <div class="two">
+          <div><label class="f" for="isCron">Cron</label><input class="i mono" id="isCron" value="0 0/2 * * * ?"></div>
+          <div><label class="f" for="isStatus">Status</label><select class="i" id="isStatus"><option>Active</option><option>Inactive</option></select></div>
+        </div>
+        <label class="f" for="isJob">Job name / class</label><input class="i mono" id="isJob" value="ECommerceItemSyncJob">
+        <label class="f" for="isDesc">Description</label><input class="i" id="isDesc" value="eCommerce item sync job for JWO">
+        <div class="row" style="margin-top:10px"><button class="btn sm primary" id="isSend">Save job</button><button class="btn sm" id="isPrev">Preview</button></div>
+        <p class="hint"><span class="ep">POST /scheduler/</span></p>
+        <div class="res" id="isRes"></div>
+      </details>
+    </div>
+  </div>
+
+  <!-- CENTER: store floor -->
+  <div class="col">
+    <div class="card">
+      <h3>JWO store floor <span class="grow"></span><span class="ep" id="storeLabel"></span></h3>
+      <div class="steps" id="steps">
+        <span data-st="login">1 · Login</span><span data-st="idle">2 · Identify at gate</span><span data-st="shop">3 · Shopping</span><span data-st="out">4 · Walk out &amp; order</span>
+      </div>
+      <div class="callout" id="callout"></div>
+      <div class="stagewrap"><div class="stage">
+        <!-- entry gate -->
+        <div class="zone z-entry">
+          <div class="zh">▸ Entry gate</div>
+          <div class="gate" id="entryGate">
+            <div class="qr" id="qr"></div>
+            <div class="state" id="entryState">IDLE</div>
+            <div class="gatebar"></div>
+          </div>
+          <label class="f" for="scanVal" style="margin:0">Customer identity code <span class="dim">(given by the shopper at entry)</span></label>
+          <input class="i mono" id="scanVal" placeholder="e.g. 0000361bmbokbnpu748ta66ce7f6nv9kf89v99k1egii6s20">
+          <div class="two">
+            <div><label class="f" for="scanChannel" style="margin:0 0 4px">Channel</label><select class="i" id="scanChannel"><option>RADIO</option><option>CAMERA</option><option>NFC</option></select></div>
+            <div><label class="f" style="margin:0 0 4px">Location</label><input class="i mono" value="ENTRY" readonly></div>
+          </div>
+          <button class="btn jwo block" id="tapInBtn">Scan at gate &amp; enter</button>
+          <p class="hint" style="margin:0"><span class="ep">POST /integrations/external/orders/customers/identify</span></p>
+          <button class="linkbtn" id="skipGate" title="Start a trip without calling identify (for testing)">Skip gate (test without identity)</button>
+        </div>
+
+        <!-- shelf -->
+        <div class="zone z-shelf"><div class="lock"><div><b>🔒</b>Identify the shopper at the entry gate first</div></div>
+          <div class="zh">▸ Shelf <span class="grow"></span><span class="dim" style="text-transform:none;letter-spacing:0">tap + to pick, − to put back</span></div>
+          <div class="row">
+            <input class="i mono" id="addSku" placeholder="SKU / item ID" style="flex:1;min-width:110px">
+            <input class="i mono" id="addUpc" placeholder="UPC (optional)" style="flex:1;min-width:110px">
+            <button class="btn" id="addSkuBtn">Add</button>
+          </div>
+          <div class="shelf" id="shelf"></div>
+          <p class="hint" style="margin:0">Use SKUs that exist in the merchant catalog. Unknown SKUs and odd quantities are sent as typed, so you can test how the platform rejects them.</p>
+        </div>
+
+        <!-- exit -->
+        <div class="zone z-exit"><div class="lock"><div><b>🔒</b>The shopper needs to enter the store before walking out</div></div>
+          <div class="zh">▸ Basket &amp; exit <span class="grow"></span><span class="timer" id="timer">00:00</span></div>
+          <div class="bl dim" style="font-size:10px"><span>ITEM</span><span>QTY</span><span title="Exclude from wallet discount">NWD</span><span></span></div>
+          <div class="basket" id="basket"></div>
+          <label class="f" for="shopperId" style="margin:0">Customer number <span class="dim" id="shopperSrc">(from identify response)</span></label>
+          <input class="i mono" id="shopperId" placeholder="filled in at the gate" readonly>
+          <label class="chk" style="margin:0"><input type="checkbox" id="exitScan"> Send EXIT scan first</label>
+          <button class="btn jwo block" id="walkOutBtn">Walk out → create order</button>
+          <p class="hint" style="margin:0"><span class="ep">POST /orders/sync</span></p>
+        </div>
+      </div></div>
+
+      <details class="more">
+        <summary>Trip details &amp; payload</summary>
+        <label class="f" for="tripId">Idempotent shopping trip ID</label>
+        <div class="row"><input class="i mono" id="tripId" style="flex:1"><button class="btn sm" id="tripNew">⟳</button></div>
+        <div class="row" style="margin-top:8px;gap:6px">
+          <span class="dim" style="font-size:12px">Test scenario:</span>
+          <input class="i mono" id="scStatus" value="PENDING" style="width:96px" title="status">
+          <input class="i mono" id="scAmount" value="50" style="width:60px" title="amount">
+          <input class="i mono" id="scMin" value="0" style="width:50px" title="min">
+          <input class="i mono" id="scMax" value="0" style="width:50px" title="max">
+          <button class="btn sm" id="scApply">Apply</button>
+        </div>
+        <div class="two">
+          <div><label class="f" for="devId">Shopper device ID</label><input class="i mono" id="devId" value="device-uuid-987654321"></div>
+          <div><label class="f" for="payId">Payment source ID</label><input class="i mono" id="payId" value="PAYMENT123"></div>
+        </div>
+        <label class="chk"><input type="checkbox" id="rawMode"> Edit the order JSON by hand before walking out</label>
+        <textarea class="i" id="payload" rows="14" readonly></textarea>
+        <div class="row" style="margin-top:6px"><button class="btn sm" id="rebuild">Rebuild from store</button>
+          <label class="chk" style="margin:0"><input type="checkbox" id="keepTrip"> Keep trip ID after walk-out (resend to test duplicate handling)</label></div>
+      </details>
+      <div class="res" id="tripRes"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: orders + log -->
+  <div class="col" id="rightCol">
+    <div class="card">
+      <div class="tabs"><button data-rt="orders" class="on">5 · Orders &amp; resync</button><button data-rt="log">Requests <span id="logCount" class="dim"></span></button></div>
+
+      <div data-rp="orders">
+        <div id="orders"></div>
+        <div class="row" style="margin:4px 0 12px">
+          <button class="btn sm" id="selFailed">Select failed</button>
+          <button class="btn sm ghost" id="clearOrders">Clear</button>
+        </div>
+        <label class="f" for="retryIds">Order IDs to retry</label>
+        <textarea class="i" id="retryIds" rows="3" placeholder="1397203289787576320"></textarea>
+        <div class="row" style="margin-top:8px"><button class="btn primary" id="retryBtn">Retry orders</button><button class="btn sm" id="retryPrev">Preview</button></div>
+        <p class="hint"><span class="ep">POST /integrations/external/orders/retry</span></p>
+        <div class="res" id="retryRes"></div>
+        <details class="more">
+          <summary>Automatic retry job</summary>
+          <div class="two">
+            <div><label class="f" for="rtCron">Cron</label><input class="i mono" id="rtCron" value="0 0/5 * * * ?"></div>
+            <div><label class="f" for="rtStatus">Status</label><select class="i" id="rtStatus"><option>Active</option><option>Inactive</option></select></div>
+          </div>
+          <label class="f" for="rtJob">Job name / class</label><input class="i mono" id="rtJob" value="ExternalOrderTriggerJob">
+          <label class="f" for="rtDesc">Description</label><input class="i" id="rtDesc" value="External order trigger job for JWO">
+          <label class="f">Operations</label>
+          <label class="chk"><input type="checkbox" class="rtOp" value="CREATE_RETRY" checked> CREATE_RETRY</label>
+          <label class="chk"><input type="checkbox" class="rtOp" value="CHECKOUT_RETRY" checked> CHECKOUT_RETRY</label>
+          <label class="chk"><input type="checkbox" class="rtOp" value="PAYMENT_RETRY" checked> PAYMENT_RETRY</label>
+          <div class="row" style="margin-top:8px"><button class="btn sm primary" id="rtSend">Save job</button><button class="btn sm" id="rtPrev">Preview</button></div>
+          <p class="hint"><span class="ep">POST /scheduler/</span></p>
+          <div class="res" id="rtRes"></div>
+        </details>
+      </div>
+
+      <div data-rp="log" class="hidden">
+        <div class="row" style="justify-content:flex-end"><button class="btn sm ghost" id="clearLog">Clear</button></div>
+        <div class="loglist" id="log"><div class="empty">Nothing sent yet.</div></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- sign in -->
+<div class="overlay hidden" id="loginOverlay">
+  <form class="modal" id="loginForm" autocomplete="on">
+    <div class="brand"><div class="logo">JWO</div><div>JWO Store Simulator<small>Sign in to an environment</small></div></div>
+    <h2>Sign in</h2>
+    <div class="dim" style="font-size:13px">Tokens stay in this browser tab only.</div>
+    <label class="f">Environment</label>
+    <div class="seg" id="envSeg2" style="display:flex"></div>
+    <div class="ltabs"><button type="button" data-lt="pw" class="on">Username &amp; password</button><button type="button" data-lt="tok">Paste token</button></div>
+    <div data-lp="pw">
+      <label class="f" for="lUser">Username</label><input class="i" id="lUser" autocomplete="username">
+      <label class="f" for="lPass">Password</label><input class="i" id="lPass" type="password" autocomplete="current-password">
+    </div>
+    <p class="hint" data-lp="pw">Generates an access token with <span class="mono">POST /goauth/oauth/token</span> (grant_type=password, scope=write). The token is then used for every JWO call.</p>
+    <div data-lp="tok" class="hidden">
+      <label class="f" for="lToken">Bearer token</label><textarea class="i" id="lToken" rows="3" placeholder="AAAA…"></textarea>
+    </div>
+    <label class="f" for="lDomain">Domain</label><input class="i mono" id="lDomain" placeholder="merchant domain" autocapitalize="characters">
+    <details class="more"><summary>Advanced</summary>
+      <label class="f" for="lBase">Platform base URL</label><input class="i mono" id="lBase">
+    </details>
+    <div class="err" id="loginErr"></div>
+    <button class="btn primary block" id="loginBtn" style="margin-top:6px">Generate token &amp; sign in</button>
+    <button type="button" class="btn ghost block" id="loginCancel" style="margin-top:6px">Cancel</button>
+  </form>
+</div>
+<div id="toasts"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ───────── config ───────── */
+const ENVS = {
+  beta: { label:'Beta', platform:'https://dev-platform.rc.fyi', client:'rc-cportal-beta' },
+  uat:  { label:'UAT',  platform:'https://uat-platform.retailcloud.com', client:'rc-cportal-uat' },
+  prod: { label:'Prod', platform:'https://account.retailcloud.com', client:'rc-cportal-live' },
+};
+const OAUTH_SECRET = 'secret';
+const SAMPLE_SHELF = [
+  { sku:'MUL1', upc:'MUL1' }, { sku:'MUL2', upc:'MUL2' }, { sku:'MLGAG01', upc:'MLGAG01' }, { sku:'MLGAG02', upc:'MLGAG02' },
+];
+
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const store = {
+  get(k, d){ try { const v = localStorage.getItem('jwosim.'+k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v){ try { localStorage.setItem('jwosim.'+k, JSON.stringify(v)); } catch {} },
+};
+const sess = {
+  get(k){ try { return JSON.parse(sessionStorage.getItem('jwosim.'+k)); } catch { return null; } },
+  set(k, v){ try { v == null ? sessionStorage.removeItem('jwosim.'+k) : sessionStorage.setItem('jwosim.'+k, JSON.stringify(v)); } catch {} },
+};
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uuid = () => crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random()*16|0; return (c=='x'?r:(r&3|8)).toString(16); });
+const iso = (d = new Date()) => new Date(d).toISOString().replace(/\.\d{3}Z$/, 'Z');
+const hash = s => { let h = 0; for (const c of String(s)) h = (h*31 + c.charCodeAt(0)) | 0; return Math.abs(h); };
+const pretty = v => typeof v === 'string' ? v : JSON.stringify(v, null, 2);
+
+function toast(msg, kind=''){
+  const t = document.createElement('div'); t.className = 'toast ' + kind; t.innerHTML = msg;
+  $('#toasts').appendChild(t);
+  setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 320); }, kind === 'bad' ? 6000 : 3200);
+}
+
+/* ───────── state ───────── */
+const S = {
+  env: store.get('env', 'beta'),
+  auth: null,
+  settings: Object.assign({ storeId:'ASTR-TST-ODLPDX', domain:'', merchantId:'', domainHeader:true }, store.get('settings', {})),
+  shelf: store.get('shelf', SAMPLE_SHELF),
+  basket: [],            // [{sku, upc, qty, nwd}]
+  trip: { phase:'idle', start:null, tripId:null, authEventId:null },
+  orders: store.get('orders', []),
+};
+S.auth = sess.get('auth.'+S.env);
+const envCfg = () => ({ ...ENVS[S.env], platform: store.get('envOverride.'+S.env, {}).platform || ENVS[S.env].platform });
+const base = () => envCfg().platform.replace(/\/+$/, '');
+
+/* ───────── network ───────── */
+let logN = 0;
+function logEntry(method, url, body, headers){
+  if (!logN) $('#log').innerHTML = '';
+  logN++; $('#logCount').textContent = `(${logN})`;
+  const d = document.createElement('details'); d.className = 'ent';
+  const path = url.replace(/^https?:\/\/[^/]+/, '');
+  d.innerHTML = `<summary><span class="m ${method}">${method}</span><span class="p" title="${esc(url)}">${esc(path)}</span><span class="c pend"><span class="spin"></span></span></summary><pre class="req"></pre><pre class="rs hidden"></pre><div class="tools"><button class="btn sm ghost" data-curl>Copy cURL</button></div>`;
+  d.querySelector('.req').textContent = url + (body != null && body !== '' ? '\n\n' + pretty(body) : '');
+  d.querySelector('[data-curl]').onclick = e => {
+    e.preventDefault();
+    const h = Object.entries(headers).map(([k, v]) => ` --header '${k}: ${k === 'Authorization' && v.startsWith('Basic') ? 'Basic …' : v}'`).join('');
+    const data = body != null ? ` --data '${(typeof body === 'string' ? body : JSON.stringify(body)).replace(/'/g, "'\\''")}'` : '';
+    navigator.clipboard?.writeText(`curl --location --request ${method} '${url}'${h}${data}`).then(() => toast('cURL copied (includes token)'));
+  };
+  $('#log').prepend(d);
+  return (status, text, ms) => {
+    const c = d.querySelector('.c');
+    c.className = 'c ' + (status >= 200 && status < 300 ? 'ok' : 'bad');
+    c.textContent = (status || 'ERR') + (ms != null ? ` · ${ms}ms` : '');
+    const r = d.querySelector('.rs'); r.classList.remove('hidden');
+    let p = text; try { p = JSON.stringify(redact(JSON.parse(text)), null, 2); } catch { p = String(text).replace(/("(?:access|refresh)_token"\s*:\s*")[^"]*/g, '$1••••••'); }
+    r.textContent = p || '(no content)';
+  };
+}
+
+// Hide token values wherever a response is shown on screen.
+function redact(v){
+  if (Array.isArray(v)) return v.map(redact);
+  if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, /(^|_)token$|^secret$|password/i.test(k) && x ? '••••••' : redact(x)]));
+  return v;
+}
+/** Returns {ok, status, data, text, ms}. Never throws for HTTP errors; throws only when not signed in. */
+async function api(method, path, { body, form, basic, noAuth, url } = {}){
+  const target = url || base() + path;
+  const headers = {};
+  let payload;
+  if (form) { headers['Content-Type'] = 'application/x-www-form-urlencoded'; payload = new URLSearchParams(form).toString(); }
+  else if (body !== undefined) { headers['Content-Type'] = 'application/json'; payload = typeof body === 'string' ? body : JSON.stringify(body); }
+  if (basic) headers['Authorization'] = basic;
+  else if (!noAuth) {
+    if (!S.auth?.token) { showLogin(); throw new Error('Sign in first'); }
+    if (S.auth.exp && S.auth.exp < Date.now()) { toast('Token expired — generate a new one', 'bad'); renderAuth(); showLogin(); throw new Error('Sign in first'); }
+    headers['Authorization'] = 'Bearer ' + S.auth.token;
+    if (S.settings.domainHeader && S.settings.domain) headers['Domain'] = S.settings.domain;
+  }
+  const done = logEntry(method, target, form ? payload.replace(/password=[^&]*/, 'password=•••') : (body === undefined ? null : body), headers);
+  const t0 = performance.now();
+  let res, text = '';
+  try {
+    res = await fetch(target, { method, headers, body: payload });
+    text = await res.text();
+  } catch (e) {
+    const ms = Math.round(performance.now() - t0);
+    done(0, `${e.message}\n\nNo readable response from ${new URL(target).host}. The browser hides the real status when the reply has no CORS headers, which usually means the service behind the gateway is down (502/503/504), or you're off VPN. Try "Copy cURL" and run it in a terminal to see the real status.`, ms);
+    return { ok:false, status:0, data:null, text:`No readable response from ${new URL(target).host}. The service is probably down (gateway 502/503) or you are off VPN. Use "Copy cURL" in Requests to see the real status.`, ms };
+  }
+  const ms = Math.round(performance.now() - t0);
+  done(res.status, text, ms);
+  let data = null; try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+  if (res.status === 401 && !basic && !noAuth) { toast('Session rejected (401). Sign in again.', 'bad'); }
+  return { ok: res.ok, status: res.status, data, text, ms };
+}
+
+function showRes(el, r){
+  el.innerHTML = `<div class="row"><span class="badge ${r.ok ? 'ok' : 'bad'}">${r.status || 'ERR'}</span><span class="dim mono" style="font-size:11px">${r.ms ?? '–'} ms</span></div><pre>${esc(r.data != null && typeof r.data === 'object' ? pretty(redact(r.data)) : (r.text || '(no content)'))}</pre>`;
+}
+function showPreview(el, p){ el.innerHTML = `<span class="badge dim">PREVIEW</span><pre>${esc(pretty(p))}</pre>`; }
+async function busy(btn, fn){
+  const html = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spin"></span> ' + btn.textContent;
+  try { await fn(); } catch (e) { if (e.message !== 'Sign in first') toast(esc(e.message), 'bad'); } finally { btn.disabled = false; btn.innerHTML = html; }
+}
+
+/* ───────── env & auth ───────── */
+function renderEnv(){
+  for (const id of ['#envSeg', '#envSeg2']) {
+    const el = $(id); el.innerHTML = '';
+    for (const [k, v] of Object.entries(ENVS)) {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = v.label;
+      b.className = k === S.env ? 'on' : ''; if (id === '#envSeg2') b.style.flex = '1';
+      b.onclick = () => switchEnv(k);
+      el.appendChild(b);
+    }
+  }
+  const c = envCfg(); $('#lBase').value = c.platform;
+}
+function switchEnv(k){
+  S.env = k; store.set('env', k); S.auth = sess.get('auth.'+k);
+  renderEnv(); renderAuth(); setConn(null); renderPhase();
+  if (!S.auth && $('#loginOverlay').classList.contains('hidden')) showLogin();
+}
+function renderAuth(){
+  const a = S.auth;
+  $('#userDot').className = 'dot' + (a ? ' ok' : '');
+  $('#userText').textContent = a ? `${a.user === 'token' ? 'Token' : a.user} · ${ENVS[S.env].label}` : 'Signed out';
+  $('#authBtn').textContent = a ? 'Sign out' : 'Sign in';
+  if (a?.domain && S.settings.domain !== a.domain) { S.settings.domain = a.domain; store.set('settings', S.settings); fillSettings(); }
+  const expired = a?.exp && a.exp < Date.now();
+  $('#tokBadge').className = 'badge ' + (!a ? 'dim' : expired ? 'bad' : 'ok');
+  $('#tokBadge').textContent = !a ? 'none' : expired ? 'expired' : 'active';
+  $('#tokInfo').innerHTML = !a ? 'Sign in with username, password and domain to generate a token.'
+    : `${a.user === 'token' ? 'Pasted token' : `User <b>${esc(a.user)}</b>`}${a.domain ? ` · domain <b>${esc(a.domain)}</b>` : ''} · ${ENVS[S.env].label}`
+      + (a.exp ? `<br>Expires ${new Date(a.exp).toLocaleString()}` : '');
+}
+$('#tokNew').onclick = () => { loginTab = 'pw'; $$('[data-lt]').forEach(x => x.classList.toggle('on', x.dataset.lt === 'pw')); $$('[data-lp]').forEach(p => p.classList.toggle('hidden', p.dataset.lp !== 'pw')); showLogin(); };
+function setConn(state, text){
+  $('#connDot').className = 'dot' + (state === true ? ' ok' : state === false ? ' bad' : '');
+  $('#connText').textContent = text || 'Not checked';
+}
+let loginTab = 'pw';
+function showLogin(){
+  $('#lDomain').value = S.settings.domain || store.get('lastDomain', '');
+  $('#lUser').value = store.get('lastUser', '');
+  renderEnv();
+  $('#loginOverlay').classList.remove('hidden');
+  setTimeout(() => (loginTab === 'pw' ? ($('#lUser').value ? $('#lPass') : $('#lUser')) : $('#lToken')).focus(), 50);
+}
+const hideLogin = () => $('#loginOverlay').classList.add('hidden');
+$$('[data-lt]').forEach(b => b.onclick = () => {
+  loginTab = b.dataset.lt;
+  $$('[data-lt]').forEach(x => x.classList.toggle('on', x === b));
+  $$('[data-lp]').forEach(p => p.classList.toggle('hidden', p.dataset.lp !== loginTab));
+});
+$('#loginCancel').onclick = hideLogin;
+$('#authBtn').onclick = () => {
+  if (S.auth) { S.auth = null; sess.set('auth.'+S.env, null); renderAuth(); setConn(null); renderPhase(); toast('Signed out'); }
+  else showLogin();
+};
+$('#loginForm').onsubmit = async e => {
+  e.preventDefault();
+  const btn = $('#loginBtn'), err = $('#loginErr'); err.textContent = '';
+  const b = $('#lBase').value.trim().replace(/\/+$/, ''), client = envCfg().client;
+  store.set('envOverride.'+S.env, { platform: b });
+  const domain = $('#lDomain').value.trim();
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Signing in…';
+  try {
+    if (loginTab === 'tok') {
+      const token = $('#lToken').value.trim().replace(/^Bearer\s+/i, '');
+      if (!token) throw new Error('Paste a bearer token');
+      S.auth = { token, user: 'token' };
+      $('#lToken').value = '';
+    } else {
+      const username = $('#lUser').value.trim(), password = $('#lPass').value;
+      if (!username || !password || !domain) throw new Error('Username, password and domain are required');
+      const r = await api('POST', '', { url: b + '/goauth/oauth/token',
+        basic: 'Basic ' + btoa(`${client}:${OAUTH_SECRET}`),
+        form: { grant_type: 'password', username, password, domain, scope: 'write' } });
+      if (!r.ok || !r.data?.access_token) throw new Error(r.data?.error_description || r.data?.message || (r.status ? `HTTP ${r.status}` : r.text) || 'No access_token in response');
+      S.auth = { token: r.data.access_token, user: username, domain, exp: r.data.expires_in ? Date.now() + r.data.expires_in * 1000 : null };
+      store.set('lastUser', username);
+      $('#lPass').value = '';
+    }
+    if (domain) { S.settings.domain = domain; store.set('lastDomain', domain); }
+    saveSettings(); fillSettings();
+    sess.set('auth.'+S.env, S.auth); renderAuth(); hideLogin(); renderPhase();
+    setTimeout(() => { $('.z-entry').scrollIntoView({ behavior: 'smooth', block: 'center' }); $('#scanVal').focus(); }, 100);
+    toast(`Signed in to <b>${ENVS[S.env].label}</b>`, 'good');
+    checkConnection();
+  } catch (ex) {
+    err.textContent = ex.message;
+    $('#loginForm').classList.remove('shake'); void $('#loginForm').offsetWidth; $('#loginForm').classList.add('shake');
+  } finally { btn.disabled = false; btn.innerHTML = 'Generate token &amp; sign in'; }
+};
+
+/* ───────── settings ───────── */
+function saveSettings(){ store.set('settings', S.settings); $('#domainBadge').textContent = S.settings.domain || '—'; $('#storeLabel').textContent = S.settings.storeId || ''; renderPayload(); }
+function fillSettings(){
+  $$('[data-s]').forEach(el => { if (el.type === 'checkbox') el.checked = !!S.settings[el.dataset.s]; else el.value = S.settings[el.dataset.s] ?? ''; });
+  $('#domainBadge').textContent = S.settings.domain || '—'; $('#storeLabel').textContent = S.settings.storeId || '';
+}
+$$('[data-s]').forEach(el => el.addEventListener('input', () => {
+  S.settings[el.dataset.s] = el.type === 'checkbox' ? el.checked : el.value.trim(); saveSettings();
+}));
+$('#themeBtn').onclick = () => {
+  const t = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+  document.documentElement.dataset.theme = t; store.set('theme', t);
+};
+
+/* ───────── 1. connection ───────── */
+async function checkConnection(){
+  setConn(null, 'Checking…');
+  const r = await api('GET', '/integrations/providers/jwo/authorizations');
+  showRes($('#connRes'), r);
+  setConn(r.ok, r.ok ? `JWO connected · ${S.settings.domain || ENVS[S.env].label}` : `JWO ${r.status || 'unreachable'}`);
+}
+$('#connBtn').onclick = e => busy(e.currentTarget, checkConnection);
+
+/* ───────── 3. item sync ───────── */
+$('#syncBtn').onclick = e => busy(e.currentTarget, async () => {
+  const r = await api('POST', '/integrations/providers/jwo/items/sync', { body: '' });
+  showRes($('#syncRes'), r);
+  toast(r.ok ? 'Item sync triggered' : `Item sync failed (${r.status || 'network'})`, r.ok ? 'good' : 'bad');
+});
+function schedPayload(p, extra){
+  const job = $('#'+p+'Job').value.trim();
+  return Object.assign({ cronExpression: $('#'+p+'Cron').value.trim(), merchantID: S.settings.merchantId, domain: S.settings.domain,
+    jobName: job, jobClassName: job, description: $('#'+p+'Desc').value.trim() }, extra, { status: $('#'+p+'Status').value });
+}
+$('#isPrev').onclick = () => showPreview($('#isRes'), schedPayload('is'));
+$('#isSend').onclick = e => busy(e.currentTarget, async () => showRes($('#isRes'), await api('POST', '/scheduler/', { body: schedPayload('is') })));
+const rtPayload = () => schedPayload('rt', { filter: { operation: $$('.rtOp:checked').map(c => c.value) } });
+$('#rtPrev').onclick = () => showPreview($('#rtRes'), rtPayload());
+$('#rtSend').onclick = e => busy(e.currentTarget, async () => showRes($('#rtRes'), await api('POST', '/scheduler/', { body: rtPayload() })));
+
+/* ───────── 2. entry gate ───────── */
+function drawQr(v){
+  const h = hash(v || 'x'); let html = '';
+  for (let i = 0; i < 121; i++) {
+    const x = i % 11, y = (i / 11) | 0;
+    const finder = (x < 3 && y < 3) || (x > 7 && y < 3) || (x < 3 && y > 7);
+    const on = finder ? !(x % 10 === 1 && y % 10 === 1) && !(x === 9 && y === 1) : ((hash(v + i) ^ h) & 3) === 0 || ((hash(i + v) >> 3) & 1);
+    html += `<i class="${on ? '' : 'o'}"></i>`;
+  }
+  $('#qr').innerHTML = html;
+}
+function randomScan(){ const a = 'abcdefghijklmnopqrstuv0123456789'; let s = '0000'; for (let i = 0; i < 44; i++) s += a[Math.random()*a.length|0]; return s; }
+$('#scanVal').value = store.get('scan', '');
+$('#shopperId').value = '';
+$('#scanVal').addEventListener('input', () => { store.set('scan', $('#scanVal').value.trim()); drawQr($('#scanVal').value); });
+$('#shopperId').addEventListener('input', renderPayload);
+function setCustomer(id, src){
+  $('#shopperId').value = id || '';
+  $('#shopperId').readOnly = src !== 'manual';
+  $('#shopperSrc').textContent = src === 'manual' ? '(type it — gate skipped)' : '(from identify response)';
+  renderPayload();
+}
+$('#scanVal').addEventListener('keydown', e => { if (e.key === 'Enter') $('#tapInBtn').click(); });
+$('#skipGate').onclick = () => { startTrip(); setCustomer('', 'manual'); $('#shopperId').focus(); toast('Gate skipped — type the customer number for the order'); };
+
+function identifyBody(location){
+  return {
+    merchantDomain: S.settings.domain,
+    payload: {
+      requestId: uuid(), storeId: S.settings.storeId,
+      scanEvent: { id: uuid(), timestamp: iso(), location, value: $('#scanVal').value.trim(), channel: $('#scanChannel').value },
+    },
+    source: 'jwo',
+  };
+}
+// Find a shopper/customer id in the identify response, whatever its shape.
+function findShopperId(o, d = 0){
+  if (!o || typeof o !== 'object' || d > 5) return null;
+  for (const [k, v] of Object.entries(o)) if (/^(shopperIdentity|shopper_?id|customer_?id|customerID)$/i.test(k)) {
+    if (v && typeof v === 'object' && v.id) return String(v.id);
+    if (v != null && typeof v !== 'object') return String(v);
+  }
+  for (const v of Object.values(o)) { const r = findShopperId(v, d + 1); if (r) return r; }
+  return null;
+}
+$('#tapInBtn').onclick = e => busy(e.currentTarget, async () => {
+  if (!$('#scanVal').value.trim()) { toast('Enter the customer identity code the shopper gave at the gate', 'bad'); $('#scanVal').focus(); return; }
+  $('#entryState').textContent = 'SCANNING…'; $('#entryState').className = 'state warn';
+  const r = await api('POST', '/integrations/external/orders/customers/identify', { body: identifyBody('ENTRY') });
+  showRes($('#tripRes'), r);
+  const action = String(r.data?.action || '').toUpperCase();
+  const customer = r.data && typeof r.data === 'object' ? (r.data.id != null ? String(r.data.id) : findShopperId(r.data)) : null;
+  if (r.ok && action !== 'REJECT' && customer) {
+    $('#entryGate').classList.add('open');
+    $('#entryState').textContent = `${action || 'ACCEPTED'} · GATE OPEN`; $('#entryState').className = 'state ok';
+    S.trip.phase = 'idle';
+    startTrip();
+    setCustomer(customer, 'identify');
+    toast(`Customer <b>${esc(customer)}</b> identified — shopper is in the store`, 'good');
+  } else {
+    $('#entryGate').classList.remove('open');
+    const why = !r.ok ? (r.status || 'ERR') : action === 'REJECT' ? 'REJECT' : 'NO CUSTOMER';
+    $('#entryState').textContent = `DENIED · ${why}`; $('#entryState').className = 'state bad';
+    toast(!r.ok ? `Identify failed (${r.status || 'network'})`
+      : action === 'REJECT' ? 'Gate rejected this customer code (action: REJECT). Check the code or the shopper account.'
+      : 'Identify response had no customer number', 'bad');
+  }
+});
+
+/* ───────── trip ───────── */
+let timerH;
+function startTrip(){
+  if (S.trip.phase === 'idle' || S.trip.phase === 'out') {
+    S.trip = { phase:'in', start: new Date(), tripId: newTripId(), authEventId: uuid() };
+    S.basket = []; renderBasket();
+  }
+  clearInterval(timerH); timerH = setInterval(tick, 1000); tick();
+  renderPhase(); renderPayload();
+}
+function tick(){
+  if (!S.trip.start) { $('#timer').textContent = '00:00'; return; }
+  const s = Math.floor((Date.now() - S.trip.start) / 1000);
+  $('#timer').textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+}
+function renderPhase(){
+  const inStore = S.trip.phase === 'in' || S.trip.phase === 'shop';
+  const cur = !S.auth ? 'login' : inStore ? 'shop' : 'idle';
+  const order = ['login', 'idle', 'shop', 'out'], i = order.indexOf(cur);
+  $$('#steps span').forEach(s => { const j = order.indexOf(s.dataset.st); s.className = j === i ? 'on' : j < i ? 'done' : ''; });
+  $('.z-shelf').classList.toggle('locked', !inStore);
+  $('.z-exit').classList.toggle('locked', !inStore);
+  $('.z-entry').classList.toggle('focus', !!S.auth && !inStore);
+  $('#tapInBtn').disabled = inStore;
+  $('#callout').innerHTML = !S.auth ? '<b>Step 1 ·</b> Sign in with username, password and domain to get a token.'
+    : inStore ? '<b>Step 3 ·</b> Shopper is in the store. Pick items from the shelf, then <b>Walk out</b> to create the order.'
+    : '<b>Step 2 ·</b> Shopper is at the entry gate. Enter the <b>customer identity code</b> they give you and scan to let them in.';
+}
+const newTripId = () => `sim-${S.settings.domain || 'X'}-${uuid()}`;
+function ensureTrip(){ if (!S.trip.tripId) { S.trip.tripId = newTripId(); S.trip.authEventId = uuid(); } }
+$('#tripId').addEventListener('input', () => { S.trip.tripId = $('#tripId').value.trim(); renderPayload(); });
+$('#tripNew').onclick = () => { S.trip.tripId = newTripId(); renderPayload(); };
+$('#scApply').onclick = () => {
+  S.trip.tripId = `test-status_${$('#scStatus').value.trim()}-amount_${$('#scAmount').value.trim()}-min_${$('#scMin').value.trim()}-max_${$('#scMax').value.trim()}-${S.settings.domain}-${10000 + (Math.random()*90000|0)}`;
+  renderPayload();
+};
+['#devId', '#payId'].forEach(s => $(s).addEventListener('input', renderPayload));
+
+/* ───────── shelf & basket ───────── */
+const swatch = sku => { const h = hash(sku) % 360; return `linear-gradient(135deg,hsl(${h},55%,38%),hsl(${(h+40)%360},50%,22%))`; };
+function renderShelf(){
+  $('#shelf').innerHTML = S.shelf.length ? S.shelf.map((p, i) => {
+    const inB = S.basket.find(b => b.sku === p.sku);
+    return `<div class="prod ${inB ? 'in' : ''}">
+      ${inB ? `<span class="cnt">${esc(inB.qty)}</span>` : ''}
+      <button class="x" data-rm="${i}" title="Remove from shelf">✕</button>
+      <div class="sw" style="background:${swatch(p.sku)}">${esc(p.sku.slice(0, 10))}</div>
+      <div class="nm" title="${esc(p.sku)}${p.upc && p.upc !== p.sku ? ' · UPC ' + esc(p.upc) : ''}">${esc(p.sku)}</div>
+      <div class="act"><button class="btn sm" data-take="${i}" data-d="-1">−</button><button class="btn sm" data-take="${i}" data-d="1">+</button></div>
+    </div>`;
+  }).join('') : '<div class="empty" style="grid-column:1/-1">Shelf is empty. Add SKUs above.</div>';
+}
+function addToShelf(){
+  const sku = $('#addSku').value.trim(); if (!sku) return;
+  if (!S.shelf.some(p => p.sku === sku)) S.shelf.push({ sku, upc: $('#addUpc').value.trim() || sku });
+  store.set('shelf', S.shelf); $('#addSku').value = ''; $('#addUpc').value = ''; $('#addSku').focus(); renderShelf();
+}
+$('#addSkuBtn').onclick = addToShelf;
+[$('#addSku'), $('#addUpc')].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') addToShelf(); }));
+$('#shelf').addEventListener('click', e => {
+  const rm = e.target.closest('[data-rm]');
+  if (rm) { S.shelf.splice(+rm.dataset.rm, 1); store.set('shelf', S.shelf); renderShelf(); return; }
+  const t = e.target.closest('[data-take]'); if (!t || !['in', 'shop'].includes(S.trip.phase)) return;
+  const p = S.shelf[+t.dataset.take], d = +t.dataset.d;
+  let b = S.basket.find(x => x.sku === p.sku);
+  if (!b && d > 0) { b = { sku: p.sku, upc: p.upc || p.sku, qty: 0, nwd: false }; S.basket.push(b); }
+  if (!b) return;
+  b.qty = Math.max(0, Number(b.qty) + d);
+  if (b.qty === 0 && d < 0) S.basket = S.basket.filter(x => x !== b);
+  if (S.trip.phase === 'in') { S.trip.phase = 'shop'; renderPhase(); }
+  renderBasket();
+});
+function renderBasket(){
+  $('#basket').innerHTML = S.basket.length ? S.basket.map((b, i) => `<div class="bl">
+      <span title="${esc(b.sku)}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(b.sku)}</span>
+      <input class="i mono" data-q="${i}" value="${esc(b.qty)}">
+      <input type="checkbox" class="nd" data-n="${i}" ${b.nwd ? 'checked' : ''} title="Exclude from wallet discount">
+      <button class="btn sm ghost" data-del="${i}" style="padding:2px">✕</button></div>`).join('')
+    : '<div class="empty">Basket is empty.<br>Pick items from the shelf.</div>';
+  renderShelf(); renderPayload();
+}
+$('#basket').addEventListener('input', e => {
+  if (e.target.dataset.q !== undefined) { S.basket[+e.target.dataset.q].qty = e.target.value; renderShelf(); renderPayload(); }
+  if (e.target.dataset.n !== undefined) { S.basket[+e.target.dataset.n].nwd = e.target.checked; renderPayload(); }
+});
+$('#basket').addEventListener('click', e => { const d = e.target.closest('[data-del]'); if (d) { S.basket.splice(+d.dataset.del, 1); renderBasket(); } });
+
+/* ───────── 4. order ───────── */
+const fmtQty = q => { const n = Number(q); return String(q).trim() !== '' && Number.isFinite(n) ? n.toFixed(1) : String(q); };
+function orderBody(){
+  ensureTrip();
+  const start = S.trip.start || new Date(Date.now() - 5 * 60000);
+  const shopper = $('#shopperId').value.trim();
+  const body = {
+    merchantDomain: S.settings.domain,
+    payload: {
+      requestId: uuid(),
+      idempotentShoppingTripId: S.trip.tripId,
+      storeId: S.settings.storeId,
+      shoppingTrip: {
+        startTime: iso(start), endTime: iso(),
+        authEvents: [{ id: S.trip.authEventId, timestamp: iso(start), location: 'ENTRY', payloadType: 'SCAN_CODE', scanResult: { id: shopper, type: 'SHOPPER' } }],
+      },
+      cartItems: S.basket.map(b => ({
+        id: b.sku, type: 'SKU', quantity: { value: fmtQty(b.qty), unit: 'unit' },
+        externalIdentifiers: [{ id: b.upc || b.sku, type: 'UPC' }],
+      })),
+      shopperIdentity: { id: shopper },
+      shopperDeviceId: $('#devId').value.trim(),
+      paymentSource: { id: $('#payId').value.trim() },
+    },
+    source: 'jwo',
+  };
+  const nwd = S.basket.filter(b => b.nwd).map(b => b.sku);
+  if (nwd.length) body.walletDiscountExcludedItemIDs = nwd;
+  return body;
+}
+function renderPayload(){
+  $('#tripId').value = S.trip.tripId || '';
+  if (!$('#rawMode').checked) $('#payload').value = pretty(orderBody());
+}
+$('#rawMode').onchange = e => { $('#payload').readOnly = !e.target.checked; if (!e.target.checked) renderPayload(); };
+$('#rebuild').onclick = () => { $('#payload').value = pretty(orderBody()); };
+
+function findOrderId(o, d = 0){
+  if (!o || typeof o !== 'object' || d > 5) return null;
+  for (const [k, v] of Object.entries(o)) if (/^(order_?id|purchase_?id)$/i.test(k) && v != null && typeof v !== 'object') return String(v);
+  for (const v of Object.values(o)) { const r = findOrderId(v, d + 1); if (r) return r; }
+  if (d === 0 && o.id != null && typeof o.id !== 'object') return String(o.id);
+  return null;
+}
+const looksFailed = j => j && typeof j === 'object' && (j.success === false || /"status"\s*:\s*"(failed|failure|error)"/i.test(JSON.stringify(j)));
+
+$('#walkOutBtn').onclick = e => busy(e.currentTarget, async () => {
+  let body;
+  if ($('#rawMode').checked) { try { body = JSON.parse($('#payload').value); } catch (x) { toast('Order JSON is invalid: ' + esc(x.message), 'bad'); return; } }
+  else body = orderBody();
+  if (!body.payload?.cartItems?.length) { toast('Basket is empty — pick something first', 'bad'); return; }
+  if (!body.payload?.shopperIdentity?.id) { toast('No customer number — identify the shopper at the gate first', 'bad'); return; }
+  if ($('#exitScan').checked) {
+    const x = await api('POST', '/integrations/external/orders/customers/identify', { body: identifyBody('EXIT') });
+    if (!x.ok) toast(`EXIT scan failed (${x.status || 'network'}) — sending order anyway`, 'bad');
+  }
+  const r = await api('POST', '/integrations/external/orders/sync', { body });
+  showRes($('#tripRes'), r);
+  const ok = r.ok && !looksFailed(r.data);
+  S.orders.unshift({ time: new Date().toISOString(), env: S.env, tripId: body.payload.idempotentShoppingTripId,
+    items: body.payload.cartItems.length, status: r.status, ok, orderId: findOrderId(r.data) || '' });
+  S.orders = S.orders.slice(0, 200); store.set('orders', S.orders); renderOrders();
+  toast(ok ? 'Order created ✓' : `Order failed (${r.status || 'network'}) — see Orders to retry`, ok ? 'good' : 'bad');
+  S.trip.phase = 'out'; clearInterval(timerH);
+  $('#entryGate').classList.remove('open'); $('#entryState').textContent = 'IDLE'; $('#entryState').className = 'state';
+  if (!$('#keepTrip').checked) { S.trip = { phase:'out', start:null, tripId:null, authEventId:null }; S.basket = []; renderBasket(); }
+  renderPhase();
+  $('#scanVal').value = ''; store.set('scan', ''); drawQr(''); if (!$('#keepTrip').checked) setCustomer('', 'identify');
+});
+
+/* ───────── 5. orders & resync ───────── */
+function renderOrders(){
+  const list = S.orders;
+  $('#orders').innerHTML = list.length ? list.map((o, i) => `<div class="ord">
+      <input type="checkbox" data-sel="${i}">
+      <span class="tid" title="${esc(o.tripId)}">${esc(o.tripId)}</span>
+      <span class="badge ${o.ok ? 'ok' : 'bad'}">${o.status || 'ERR'}</span>
+      <span class="t">${new Date(o.time).toLocaleString()} · ${esc(ENVS[o.env]?.label || o.env)} · ${o.items} item${o.items === 1 ? '' : 's'}</span>
+      <span></span>
+      <input class="i" data-oid="${i}" value="${esc(o.orderId)}" placeholder="order ID (paste if missing)">
+      <span></span><span></span>
+      <button class="btn sm" data-retry="${i}">Retry</button>
+    </div>`).join('') : '<div class="empty">Orders you create appear here.</div>';
+}
+$('#orders').addEventListener('input', e => { const i = e.target.dataset.oid; if (i !== undefined) { S.orders[+i].orderId = e.target.value.trim(); store.set('orders', S.orders); } });
+$('#orders').addEventListener('change', e => { if (e.target.dataset.sel !== undefined) fillRetry(); });
+$('#orders').addEventListener('click', e => {
+  const b = e.target.closest('[data-retry]'); if (!b) return;
+  const o = S.orders[+b.dataset.retry];
+  if (!o.orderId) { toast('No order ID for this trip — paste it first', 'bad'); return; }
+  $('#retryIds').value = o.orderId; $('#retryBtn').click();
+});
+function fillRetry(){ $('#retryIds').value = $$('[data-sel]:checked').map(c => S.orders[+c.dataset.sel].orderId).filter(Boolean).join('\n'); }
+$('#selFailed').onclick = () => { $$('[data-sel]').forEach(c => c.checked = !S.orders[+c.dataset.sel].ok); fillRetry(); };
+$('#clearOrders').onclick = () => { if (confirm('Clear the order list?')) { S.orders = []; store.set('orders', S.orders); renderOrders(); } };
+const retryBody = () => $('#retryIds').value.split(/[\s,]+/).filter(Boolean).map(orderID => ({ orderID }));
+$('#retryPrev').onclick = () => showPreview($('#retryRes'), retryBody());
+$('#retryBtn').onclick = e => busy(e.currentTarget, async () => {
+  const b = retryBody(); if (!b.length) { toast('Enter at least one order ID', 'bad'); return; }
+  const r = await api('POST', '/integrations/external/orders/retry', { body: b });
+  showRes($('#retryRes'), r);
+  toast(r.ok ? `Retry sent for ${b.length} order${b.length > 1 ? 's' : ''}` : `Retry failed (${r.status || 'network'})`, r.ok ? 'good' : 'bad');
+});
+
+/* ───────── right tabs ───────── */
+$$('[data-rt]').forEach(b => b.onclick = () => {
+  $$('[data-rt]').forEach(x => x.classList.toggle('on', x === b));
+  $$('[data-rp]').forEach(p => p.classList.toggle('hidden', p.dataset.rp !== b.dataset.rt));
+});
+$('#clearLog').onclick = () => { logN = 0; $('#logCount').textContent = ''; $('#log').innerHTML = '<div class="empty">Nothing sent yet.</div>'; };
+
+/* ───────── init ───────── */
+const theme = store.get('theme', null);
+if (theme) document.documentElement.dataset.theme = theme;
+else if (matchMedia('(prefers-color-scheme: light)').matches) document.documentElement.dataset.theme = 'light';
+fillSettings(); renderEnv(); renderAuth(); drawQr($('#scanVal').value);
+renderBasket(); renderOrders(); renderPhase();
+if (!S.auth) showLogin();
+})();
+</script>
+</body>
+</html>
