@@ -364,7 +364,6 @@ pre{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padd
 const ENVS = {
   beta: { label:'Beta', platform:'https://dev-platform.rc.fyi', client:'rc-cportal-beta' },
   uat:  { label:'UAT',  platform:'https://uat-platform.retailcloud.com', client:'rc-cportal-uat' },
-  prod: { label:'Prod', platform:'https://account.retailcloud.com', client:'rc-cportal-live' },
 };
 const OAUTH_SECRET = 'secret';
 const SAMPLE_SHELF = [
@@ -395,7 +394,7 @@ function toast(msg, kind=''){
 
 /* ───────── state ───────── */
 const S = {
-  env: store.get('env', 'beta'),
+  env: ENVS[store.get('env', 'beta')] ? store.get('env', 'beta') : 'beta',  // only Beta and UAT are offered
   auth: null,
   settings: Object.assign({ storeId:'', domain:'', merchantId:'', domainHeader:true, mirror:true, rcStoreId:'', deviceId:'device-uuid-987654321', paymentId:'PAYMENT123' }, store.get('settings', {})),
   shelf: store.get('shelf', SAMPLE_SHELF),

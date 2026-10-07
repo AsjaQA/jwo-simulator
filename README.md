@@ -15,7 +15,7 @@ Browser-based simulator for testing the RetailCloud **Just Walk Out (JWO)** inte
 
 Also: JWO connection check (fills the JWO store ID and the RC store used for the cart `Entitlement` header), item sync, and scheduler jobs (`ECommerceItemSyncJob`, `ExternalOrderTriggerJob`).
 
-Environments: Beta (`dev-platform.rc.fyi`), UAT, Prod. Camera scanning needs HTTPS (GitHub Pages) or localhost.
+Environments: Beta (`dev-platform.rc.fyi`) and UAT (`uat-platform.retailcloud.com`). Camera scanning needs HTTPS (GitHub Pages) or localhost.
 
 ## Run locally
 
