@@ -696,7 +696,7 @@ function gateHtml(g){
     <div class="gsec hidden" data-r="manualBox">
       <input class="i mono" data-r="cust" placeholder="customer number (optional)">
       <button class="btn jwo block" data-a="manualEnter">Walk in</button>
-      <p class="hint" style="margin:0">Identify is not called. The customer number is used in the order if given; otherwise it is sent blank.</p>
+      <p class="hint" style="margin:0">Identify is not called. The customer number is used in the order if given; otherwise the order is sent without a scanResult.</p>
     </div>
   </div>
   <div class="gsec hidden" data-r="inside">
@@ -816,6 +816,11 @@ async function scanEnter(g){
       enter(g, customer, 'identify');
       setState(g, `${action || 'ACCEPTED'} · IN STORE`, 'ok');
       toast(`${g.name}: customer <b>${esc(customer)}</b> identified — in the store`, 'good');
+    } else if (r.ok && action === 'REJECT' && customer) {
+      // A rejected scan still returns the code; the gate opens and that code goes into the order's scanResult.
+      enter(g, customer, 'reject');
+      setState(g, 'REJECT · GATE OPENED', 'warn');
+      toast(`${g.name}: identify said REJECT — gate opened anyway; code <b>${esc(customer)}</b> will be sent in scanResult`, 'good');
     } else {
       showRes(g.r.res, r);
       const why = !r.ok ? (r.status || 'ERR') : action === 'REJECT' ? 'REJECT' : 'NO CUSTOMER';
@@ -873,7 +878,9 @@ function orderBody(g){
     idempotentShoppingTripId: g.trip.id,
     storeId: S.settings.storeId,
     shoppingTrip: { startTime: iso(start), endTime: iso(),
-      authEvents: [{ id: g.trip.authEventId, timestamp: iso(start), location: 'ENTRY', payloadType: 'SCAN_CODE', scanResult: { id: g.customer, type: 'SHOPPER' } }] },
+      authEvents: [g.customer
+        ? { id: g.trip.authEventId, timestamp: iso(start), location: 'ENTRY', payloadType: 'SCAN_CODE', scanResult: { id: g.customer, type: 'SHOPPER' } }
+        : { id: g.trip.authEventId, timestamp: iso(start), location: 'ENTRY' }] },  // no customer: no scanResult at all
     cartItems: g.items.map(b => ({ id: b.sku, type: 'SKU', quantity: { value: fmtQty(b.qty), unit: 'unit' }, externalIdentifiers: [{ id: b.upc || b.sku, type: 'UPC' }] })),
     shopperIdentity: { id: g.customer },
     shopperDeviceId: `${S.settings.deviceId || 'device-uuid-987654321'}${gates.length > 1 || g.n > 1 ? '-' + g.n : ''}`,
@@ -932,8 +939,8 @@ function renderGate(g){
   g.r.enter.classList.toggle('hidden', inside); g.r.inside.classList.toggle('hidden', !inside);
   if (!inside) { setState(g, 'IDLE'); g.r.timer.textContent = ''; }
   g.r.custLine.innerHTML = !inside ? ''
-    : g.custSrc === 'none' ? 'Customer <b>—</b> <span class="dim">(no identity — sent blank in the order)</span>'
-    : `Customer <b>${esc(g.customer)}</b> <span class="dim">${g.custSrc === 'manual' ? '(entered — identify not called)' : '(from identify response)'}</span>`;
+    : g.custSrc === 'none' ? 'Customer <b>—</b> <span class="dim">(no identity — order has no scanResult)</span>'
+    : `Customer <b>${esc(g.customer)}</b> <span class="dim">${g.custSrc === 'manual' ? '(entered — identify not called)' : g.custSrc === 'reject' ? '(identify REJECT — code from the response)' : '(from identify response)'}</span>`;
   g.r.exitWrap.classList.toggle('hidden', !g.code);
   renderPick(g); renderCart(g); renderPreview(g); tickGate(g);
 }
